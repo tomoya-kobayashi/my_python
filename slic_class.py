@@ -19,23 +19,24 @@ class SLIC:
         self.iter_max = 10 # c.f. the paper.
 
 
-    def fit(self, img_path):
+    def fit(self, image_cv2):
         """ Calculate superpixels.
         Returns the mask array.
         """
-        self.img_path = img_path
-        self.fit_init(img_path)
+        # self.img_path = img_path
+        self.fit_init(image_cv2)
         self.fit_iter()
         return self.l
 
 
-    def fit_init(self, img_path):
+    def fit_init(self, image_cv2):
         """
         Read the image from img_path,
         convert to Lab color space,
         and initialize cluster centers.
         """
-        img_rgb = io.imread(img_path)
+        # img_rgb = io.imread(img_path)
+        img_rgb = image_cv2
         if img_rgb.ndim != 3 or img_rgb.shape[2] != 3:
             raise Exception("Non RGB file. The shape was {}.".format(img_rgb.shape))
         img_lab = color.rgb2lab(img_rgb)
@@ -81,22 +82,23 @@ class SLIC:
         self.iter_max = 10 # c.f. the paper.
 
 
-    def fit(self, img_path):
+    def fit(self, image_cv2):
         """ Calculate superpixels.
         Returns the mask array.
         """
-        self.fit_init(img_path)
+        self.fit_init(image_cv2)
         self.fit_iter()
         return self.l
 
 
-    def fit_init(self, img_path):
+    def fit_init(self, image_cv2):
         """
         Read the image from img_path,
         convert to Lab color space,
         and initialize cluster centers.
         """
-        img_rgb = io.imread(img_path)
+        # img_rgb = io.imread(img_path)
+        img_rgb = image_cv2
         if img_rgb.ndim != 3 or img_rgb.shape[2] != 3:
             raise Exception("Non RGB file. The shape was {}.".format(img_rgb.shape))
         img_lab = color.rgb2lab(img_rgb)
@@ -170,11 +172,11 @@ class SLIC:
             for w in range(self.width):
                 new_img_lab[h][w] = cluster_color[self.l[h*self.width + w]]
 
-        print("self.l:" + str(len(self.l)))
-        print("self.d:" + str(len(self.d)))
-        print("self.k:" + str(self.k))
-        print("self.pixels:" + str(self.pixels))
-        print("self.size:" + str(self.size))
+        # print("self.l:" + str(len(self.l)))
+        # print("self.d:" + str(len(self.d)))
+        # print("self.k:" + str(self.k))
+        # print("self.pixels:" + str(self.pixels))
+        # print("self.size:" + str(self.size))
         # print("self.metrics:" + str(len(self.metrics)))
 
         return color.lab2rgb(new_img_lab)
@@ -228,11 +230,12 @@ class SLIC:
 
 
 
-# slic = SLIC(k = 100)
-# slic.fit("img\\ramen.jpeg")
-# # res = slic.transform()
+slic = SLIC(k = 100)
+img = io.imread("img\\ramen.jpeg")
+slic.fit(img)
+res = slic.transform()
 # saliency = slic.segment_saliency("img\\ramen.jpeg")
-# io.imsave("img\\new_img_saliency.jpeg", saliency)
+io.imsave("img\\test.jpeg", res)
 
 # io.imshow(res)
 # io.imsave("img\\out.jpeg", res)
