@@ -230,6 +230,40 @@ class Application(tkinter.Tk):
 
     #############################################################################
     def compute_segmentation(self, event):
+        """
+        １：プルダウン（segmentation_combobox）からindex numberを取得
+        ２：スケールバーからパラメタを取得
+        ３：該当する関数をsegmentation_func_listから取得し、パラメタ値も含め入力画像に適用
+        ４：出力画像をデータオブジェクトに保存
+        ５：データオブジェクトから参照しキャンバス貼り付け
+        """
+        ### 1 : index取得　関数取得
+        index = self.segmentation_combobox.current()
+        func = self.segmentation_func_list[index]
+        print(index, func.__name__)
+        ### 2 : スケールバーの値（パラメタ）取得
+        parameter = self.scale_bar_tab3.get()
+        ### 3 : 入力に合わせ型変換　該当する関数で領域分割
+        image_cv2 = pil_to_cv2(self.data.input)
+        out = func(image_cv2, parameter)
+        ### 4 : ローカル変数imageに保存し、リサイズなどしてキャンバス貼り付け
+        self.data.segmentation = cv2_to_pil(out)
+        image = self.data.segmentation
+        ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
+        max_size = max([image.width, image.height])
+        w_size = int(image.width*(self.canvas_height/2)/max_size)
+        h_size = int(image.height*(self.canvas_height/2)/max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+        ### 画像の描画位置を1/2キャンバス中心に調節
+        x = int(self.canvas_width / 4)
+        y = int(self.canvas_height / 4)
+        ### キャンバスに描画中の画像を削除
+        if self.tab3_canvas_obj is not None:
+            self.tab3_canvas.delete(self.tab3_canvas_obj)
+            print("tab3 canvas object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab3_canvas_obj = self.tab3_canvas.create_image(x, y, image=self.tk_image)
+
         pass
         # #スケールバーから値を取得
         # a = self.scale_bar1.get()
@@ -376,8 +410,11 @@ class Application(tkinter.Tk):
         self.tab3_canvas_obj= None
 
         ### スケールバー 作成と配置
-        self.scale_bar = tk.Scale(self.tab3, orient=tkinter.HORIZONTAL)
-        self.scale_bar.pack()
+        self.scale_bar_tab3 = tk.Scale(self.tab3, orient=tkinter.HORIZONTAL, from_=0, to=200, variable=100)
+        self.scale_bar_tab3.set(100)
+        self.scale_bar_tab3.pack()
+        #マウスを離したときにcompute_segmentation実行
+        self.scale_bar_tab3.bind("<ButtonRelease>", self.compute_segmentation)
 
     
     """Tab4のウィジェット作成関数【領域顕著度】"""

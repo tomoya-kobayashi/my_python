@@ -1,5 +1,6 @@
 """
 データ保存用クラス
+input_resizeはいらないかも。inputにresizeしたやつ入れちゃう
 """
 
 import cv2

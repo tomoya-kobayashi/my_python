@@ -7,16 +7,16 @@ from slic_class import *
 # io.imsave("C:\\Users\\mieli\\my_python\\img\\cat1_slic.jpeg", out)
 
 """opencvにおけるSLIC法の関数　（型：numpy　⇒　cv2として扱える？）"""
-def slic_opencv(image_sk, path):
+def slic_opencv(image_sk, k):
     label = segmentation.slic(image_sk, compactness=20, start_label=1)
     out = color.label2rgb(label, image_sk, kind = 'avg', bg_label=0)
     # io.imsave("img\\cat1_slic.jpeg", out)
     return out
 
 
-def slic(path):
-    slic = SLIC(k = 100)
-    slic.fit(path)
+def slic(image_cv2, var_k=100):
+    slic = SLIC(k = var_k)
+    slic.fit(image_cv2)
     res = slic.transform()
     # saliency = slic.segment_saliency("img\\ramen.jpeg")
     # io.imsave("img\\new_img_saliency.jpeg", res)
