@@ -36,7 +36,7 @@ class SLIC:
         and initialize cluster centers.
         """
         # img_rgb = io.imread(img_path)
-        img_rgb = image_cv2
+        img_rgb = cv2.cvtColor(image_cv2, cv2.COLOR_BGR2RGB)
         if img_rgb.ndim != 3 or img_rgb.shape[2] != 3:
             raise Exception("Non RGB file. The shape was {}.".format(img_rgb.shape))
         img_lab = color.rgb2lab(img_rgb)
@@ -98,7 +98,7 @@ class SLIC:
         and initialize cluster centers.
         """
         # img_rgb = io.imread(img_path)
-        img_rgb = image_cv2
+        img_rgb = cv2.cvtColor(image_cv2, cv2.COLOR_BGR2RGB)
         if img_rgb.ndim != 3 or img_rgb.shape[2] != 3:
             raise Exception("Non RGB file. The shape was {}.".format(img_rgb.shape))
         img_lab = color.rgb2lab(img_rgb)
@@ -230,12 +230,12 @@ class SLIC:
 
 
 
-slic = SLIC(k = 100)
-img = io.imread("img\\ramen.jpeg")
-slic.fit(img)
-res = slic.transform()
-# saliency = slic.segment_saliency("img\\ramen.jpeg")
-io.imsave("img\\test.jpeg", res)
+# slic = SLIC(k = 100)
+# img = io.imread("img\\ramen.jpeg")
+# slic.fit(img)
+# res = slic.transform()
+# # saliency = slic.segment_saliency("img\\ramen.jpeg")
+# io.imsave("img\\test.jpeg", res)
 
 # io.imshow(res)
 # io.imsave("img\\out.jpeg", res)

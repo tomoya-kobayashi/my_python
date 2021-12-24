@@ -228,6 +228,8 @@ class Application(tkinter.Tk):
 
 
 
+
+
     #############################################################################
     def compute_segmentation(self, event):
         """
@@ -246,13 +248,26 @@ class Application(tkinter.Tk):
         ### 3 : 入力に合わせ型変換　該当する関数で領域分割
         image_cv2 = pil_to_cv2(self.data.input)
         out = func(image_cv2, parameter)
+
+        self.segmentation_path = "img\\segmentation.jpeg"
+        io.imsave(self.segmentation_path, out)
+
         ### 4 : ローカル変数imageに保存し、リサイズなどしてキャンバス貼り付け
-        self.data.segmentation = cv2_to_pil(out)
-        image = self.data.segmentation
+        # out_cv2 = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)
+        # self.data.segmentation = cv2_to_pil(out)
+        # pil_image = Image.fromarray(out)
+
+        # print(out)
+        
+        # height, width, _ = out.shape
+        # # print(h,w,c)
+
+        image = Image.open(self.segmentation_path)
+        self.data.segmentation = image
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image.width, image.height])
-        w_size = int(image.width*(self.canvas_height/2)/max_size)
-        h_size = int(image.height*(self.canvas_height/2)/max_size)
+        w_size = int(image.width * (self.canvas_height / 2) / max_size)
+        h_size = int(image.height * (self.canvas_height / 2) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 4)
@@ -264,37 +279,6 @@ class Application(tkinter.Tk):
         ### 画像をキャンバスに描画
         self.tab3_canvas_obj = self.tab3_canvas.create_image(x, y, image=self.tk_image)
 
-        pass
-        # #スケールバーから値を取得
-        # a = self.scale_bar1.get()
-
-        # image = io.imread(self.file_path)
-        # label = segmentation.slic(image, compactness=a, start_label=1)
-        # self.slic_out = color.label2rgb(label, image, kind = 'avg', bg_label=0)
-
- 
-        # # 画像保存
-        # io.imsave("C:\\Users\\mieli\\my_python\\img\\cat1_slic.jpeg", self.slic_out)
-
-        # # 画像の描画位置を調節
-        # x = int(self.canvas_width / 2)
-        # y = int(self.canvas_height / 2)
-
-        # #画像削除
-        # if self.after_canvas_obj is not None:
-        #     self.after_canvas.delete(self.after_canvas_obj)
-
-        # image = Image.open("C:\\Users\\mieli\\my_python\\img\\cat1_slic.jpeg")
-        # w_size = int(image.width/4)
-        # h_size = int(image.height/4)
-        # tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
-        # self.after_image = tk_image
-
-        # # 画像を2つ目のキャンバスに描画
-        # self.after_canvas_obj = self.after_canvas.create_image(
-        #     x, y,
-        #     image=self.after_image
-        # )
     #############################################################################      
 
 
