@@ -607,6 +607,7 @@ class Application(tkinter.Tk):
             return
         self.compute_saliency()
         self.compute_segmentation()
+        # self.scale_bar_tab3['variable'] = self.config.segmentation_k
         self.compute_saliency_segmentation()
         self.compute_masked_image()
         self.compute_paint1()
