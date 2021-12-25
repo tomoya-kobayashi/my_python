@@ -9,6 +9,7 @@ from skimage import io, segmentation, color
 
 
 from Data import Data
+from config import Config
 from kuwahara2 import Kuwahara
 from my_convert import *
 from saliency import *
@@ -18,9 +19,17 @@ from paint import *
 
 
 data = Data()
+# config = Config()
+
+"""
+config.saliency_func_index
+"""
 
 tk_images = []
-config_list = dict()
+config_dict_list = ["default_1", "my_config_1"]
+
+
+
 
 class Application(tkinter.Tk):
     def __init__(self):
@@ -30,12 +39,14 @@ class Application(tkinter.Tk):
         self.data = data
 
         global tk_images
+        global config_dict_list
+        self.config = Config()
 
         ### キャンバスのサイズ
         self.canvas_width = 400
         self.canvas_height = 400
         ### アプリのウィンドウのサイズ設定
-        self.geometry("820x480")
+        self.geometry("820x510")
 
         # self.configure(bg='#81BEF7')
 
@@ -56,8 +67,8 @@ class Application(tkinter.Tk):
         self.segmentation_func_list = [slic, slic_opencv]
         self.segmentation_name_list = [slic.__name__, slic_opencv.__name__]
         self.paint_func_list = [kuwahara, watercolor, pencil]
-        self.paint_name_list = [kuwahara.__name__, watercolor.__name__, pencil.__name__]
-
+        self.paint_name_list = ["油彩:{}".format(kuwahara.__name__), "水彩:{}".format(watercolor.__name__), "鉛筆:{}".format(pencil.__name__)]
+        
 
         #############################################################################
         ### Notebook作成
@@ -111,14 +122,17 @@ class Application(tkinter.Tk):
         self.save_config_button.grid(row=2, column=2)
 
         ### comboboxのオブジェクト生成　リスト指定
-        self.config_combobox = ttk.Combobox(self, values=self.segmentation_name_list)
+        self.config_combobox = ttk.Combobox(self, values=config_dict_list)
         ### comboboxの貼り付け
         self.config_combobox.grid(row=3, column=2)
         ### comboboxの初期値設定変更（index=1が初期値）
         # self.saliency_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.segmentation_combobox.bind("<<ComboboxSelected>>", self.compute_segmentation)
+        self.config_combobox.bind("<<ComboboxSelected>>", self.compute_all)
 
+        # 設定保存ボタンの作成と配置
+        self.default_button = tkinter.Button(self, text="おまかせ", command=self.save_config)
+        self.default_button.grid(row=4, column=2)
 
 
         ### for debug
@@ -183,17 +197,22 @@ class Application(tkinter.Tk):
 
 
 
-    #############################################################################     
+    #############################################################################
+    def pre_compute_saliency(self, event):
+        ###１：プルダウン（saliency_combobox）のindex_numberを取得
+        self.config.saliency_func_index = self.saliency_combobox.current()
+        self.compute_saliency()
+
     """【Tab2】プルダウン選択時の関数＆更新ボタン"""
-    def compute_saliency(self, event):
-        """
-        １：プルダウン（saliency_combobox）のindex_numberを取得
+    def compute_saliency(self):
+        """     
         ２：該当する関数をsaliency_func_listから取得し、入力画像（データオブジェクトの中はImageTkだが大丈夫か？）に適用
         ３：出力画像をデータオブジェクトに保存
         ４：データオブジェクトから参照しキャンバスに貼り付け
         """
         ### 1 : index取得　関数取得
-        index = self.saliency_combobox.current()
+        # index = self.saliency_combobox.current()
+        index = self.config.saliency_func_index
         func = self.saliency_func_list[index]
         print(index, func.__name__)
 
@@ -243,7 +262,15 @@ class Application(tkinter.Tk):
 
 
     #############################################################################
-    def compute_segmentation(self, event):
+    def pre1_compute_segmentation(self, event):
+        self.config.segmentation_func_index = self.segmentation_combobox.current()
+        self.compute_segmentation()
+
+    def pre2_compute_segmentation(self, event):
+        self.config.segmentation_k = self.scale_bar_tab3.get()
+        self.compute_segmentation()
+
+    def compute_segmentation(self):
         """
         １：プルダウン（segmentation_combobox）からindex numberを取得
         ２：スケールバーからパラメタを取得
@@ -252,11 +279,14 @@ class Application(tkinter.Tk):
         ５：データオブジェクトから参照しキャンバス貼り付け
         """
         ### 1 : index取得　関数取得
-        index = self.segmentation_combobox.current()
+        # index = self.segmentation_combobox.current()
+        index = self.config.segmentation_func_index
         func = self.segmentation_func_list[index]
         print(index, func.__name__)
         ### 2 : スケールバーの値（パラメタ）取得
-        parameter = self.scale_bar_tab3.get()
+        # parameter = self.scale_bar_tab3.get()
+        parameter = self.config.segmentation_k
+        print(parameter)
         ### 3 : 入力に合わせ型変換　該当する関数で領域分割　領域顕著度で使用するためslicオブジェクトを保存
         # image_cv2 = pil_to_cv2(self.data.input)
         image_cv2 = cv2.imread(self.file_path)
@@ -294,6 +324,7 @@ class Application(tkinter.Tk):
 
 
 
+
     #############################################################################   
     def compute_saliency_segmentation(self):
         # saliency_map = pil_to_cv2(self.data.saliency)
@@ -328,10 +359,14 @@ class Application(tkinter.Tk):
 
 
 
+    def pre_compute_masked_image(self, event):
+        self.config.segmentation_saliency_threshold = self.scale_bar_tab4.get()
+        self.compute_masked_image()
 
-    def compute_masked_image(self, event):
+    def compute_masked_image(self):
         ### 1 : スケールバーの値（パラメタ）取得
-        threshold = self.scale_bar_tab4.get()
+        # threshold = self.scale_bar_tab4.get()
+        threshold = self.config.segmentation_saliency_threshold
 
         image = cv2.imread(self.saliency_segmentation_path)
         mask1 = self.mask(image, threshold)
@@ -404,14 +439,24 @@ class Application(tkinter.Tk):
 
 
 
-    #############################################################################   
-    def compute_paint1(self, event):
+    ############################################################################# 
+    def pre1_compute_paint1(self, event):
+        self.config.paint1_func_index = self.paint_combobox1.current()
+        self.compute_paint1()
+
+    def pre2_compute_paint1(self, event):
+        self.config.paint1_func_parameter = self.scale_bar1_tab5.get()
+        self.compute_paint1()
+
+    def compute_paint1(self):
         ### 1 : index取得　関数取得
-        index = self.paint_combobox1.current()
+        # index = self.paint_combobox1.current()
+        index = self.config.paint1_func_index
         func = self.paint_func_list[index]
         print(index, func.__name__)
         ### 2 : スケールバーの値（パラメタ）取得
-        parameter = self.scale_bar1_tab5.get()
+        # parameter = self.scale_bar1_tab5.get()
+        parameter = self.config.paint1_func_parameter
         ### 3 : 該当する関数でペイント
         out = func(self.file_path, parameter)
         self.paint1_path = "img\\paint1.jpeg"
@@ -446,14 +491,23 @@ class Application(tkinter.Tk):
 
 
 
+    def pre1_compute_paint2(self, event):
+        self.config.paint2_func_index = self.paint_combobox2.current()
+        self.compute_paint2()
 
-    def compute_paint2(self, event):
+    def pre2_compute_paint2(self, event):
+        self.config.paint2_func_parameter = self.scale_bar2_tab5.get()
+        self.compute_paint2()
+
+    def compute_paint2(self):
         ### 1 : index取得　関数取得
-        index = self.paint_combobox2.current()
+        # index = self.paint_combobox2.current()
+        index = self.config.paint2_func_index
         func = self.paint_func_list[index]
         print(index, func.__name__)
         ### 2 : スケールバーの値（パラメタ）取得
-        parameter = self.scale_bar2_tab5.get()
+        # parameter = self.scale_bar2_tab5.get()
+        parameter = self.config.paint2_func_parameter
         ### 3 : 該当する関数でペイント
         out = func(self.file_path, parameter)
         self.paint2_path = "img\\paint2.jpeg"
@@ -524,6 +578,24 @@ class Application(tkinter.Tk):
 
 
 
+    """名前を付けて保存（fileダイアログ表示⇒パス取得⇒表示中の画像保存）"""
+    def save_as(self):
+        filename = tk.filedialog.asksaveasfilename(
+            title = "名前を付けて保存",
+            filetypes = [("PNG", ".png"), ("JPEG", ".jpg"), ("Tiff", ".tif"), ("Bitmap", ".bmp")], # ファイルフィルタ
+            initialdir = "./", # 自分自身のディレクトリ
+            defaultextension = "png"
+        )
+        print(filename)
+        image = io.imread(self.out_path)
+        io.imsave(filename, image)
+
+
+
+    def compute_all(self):
+        pass
+
+
     def save_config(self, event):
         pass
 
@@ -567,7 +639,7 @@ class Application(tkinter.Tk):
         ### comboboxの初期値設定変更（index=1が初期値）
         # self.saliency_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.saliency_combobox.bind("<<ComboboxSelected>>", self.compute_saliency)
+        self.saliency_combobox.bind("<<ComboboxSelected>>", self.pre_compute_saliency)
 
 
         ### 画像表示用キャンバス
@@ -589,7 +661,7 @@ class Application(tkinter.Tk):
         ### comboboxの初期値設定変更（index=1が初期値）
         self.segmentation_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.segmentation_combobox.bind("<<ComboboxSelected>>", self.compute_segmentation)
+        self.segmentation_combobox.bind("<<ComboboxSelected>>", self.pre1_compute_segmentation)
 
 
         ### 画像表示用キャンバス
@@ -605,7 +677,7 @@ class Application(tkinter.Tk):
         self.scale_bar_tab3.set(100)
         self.scale_bar_tab3.pack()
         #マウスを離したときにcompute_segmentation実行
-        self.scale_bar_tab3.bind("<ButtonRelease>", self.compute_segmentation)
+        self.scale_bar_tab3.bind("<ButtonRelease>", self.pre2_compute_segmentation)
 
 
     
@@ -633,7 +705,7 @@ class Application(tkinter.Tk):
         self.scale_bar_tab4.set(100)
         self.scale_bar_tab4.pack()
         #マウスを離したときにcompute_masked_image実行
-        self.scale_bar_tab4.bind("<ButtonRelease>", self.compute_masked_image)
+        self.scale_bar_tab4.bind("<ButtonRelease>", self.pre_compute_masked_image)
 
         ### マスク画像貼り付け用フレーム
         self.minicanvas_frame = tk.Frame(self.tab4, height=150,width=400, background="gray")
@@ -698,14 +770,14 @@ class Application(tkinter.Tk):
         ### comboboxの初期値設定変更（index=1が初期値）
         self.paint_combobox1.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.paint_combobox1.bind("<<ComboboxSelected>>", self.compute_paint1)
+        self.paint_combobox1.bind("<<ComboboxSelected>>", self.pre1_compute_paint1)
 
         ### スケールバー 作成と配置
         self.scale_bar1_tab5 = tk.Scale(self.button_frame1, orient=tkinter.HORIZONTAL, from_=0, to=21)
         self.scale_bar1_tab5.set(7)
         self.scale_bar1_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
-        self.scale_bar1_tab5.bind("<ButtonRelease>", self.compute_paint1)
+        self.scale_bar1_tab5.bind("<ButtonRelease>", self.pre2_compute_paint1)
 
 
         ### comboboxのオブジェクト生成　リスト指定
@@ -715,7 +787,7 @@ class Application(tkinter.Tk):
         ### comboboxの初期値設定変更（index=1が初期値）
         self.paint_combobox2.current(1)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.paint_combobox2.bind("<<ComboboxSelected>>", self.compute_paint2)
+        self.paint_combobox2.bind("<<ComboboxSelected>>", self.pre1_compute_paint2)
 
 
         ### スケールバー 作成と配置
@@ -723,7 +795,7 @@ class Application(tkinter.Tk):
         self.scale_bar2_tab5.set(13)
         self.scale_bar2_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
-        self.scale_bar2_tab5.bind("<ButtonRelease>", self.compute_paint2)
+        self.scale_bar2_tab5.bind("<ButtonRelease>", self.pre2_compute_paint2)
 
     
     """Tab6のウィジェット作成関数【未定】"""
@@ -731,17 +803,7 @@ class Application(tkinter.Tk):
     #     pass
 
 
-    """名前を付けて保存（fileダイアログ表示⇒パス取得⇒表示中の画像保存）"""
-    def save_as(self):
-        filename = tk.filedialog.asksaveasfilename(
-            title = "名前を付けて保存",
-            filetypes = [("PNG", ".png"), ("JPEG", ".jpg"), ("Tiff", ".tif"), ("Bitmap", ".bmp")], # ファイルフィルタ
-            initialdir = "./", # 自分自身のディレクトリ
-            defaultextension = "png"
-        )
-        print(filename)
-        image = io.imread(self.out_path)
-        io.imsave(filename, image)
+    
 
     #################################################################################
 

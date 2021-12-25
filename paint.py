@@ -15,4 +15,7 @@ def watercolor(path, parameter):
     
 
 def pencil(path, parameter):
-    pass
+    img = cv2.imread(path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    dst_gray, dst_color = cv2.pencilSketch(img_rgb, sigma_s=parameter, sigma_r=0.06, shade_factor=0.09) 
+    return dst_color
