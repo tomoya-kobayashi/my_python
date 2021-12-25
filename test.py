@@ -81,7 +81,6 @@ pencil = Image.open('img\\ramen_pencil.jpeg')
 mask1 = Image.open('img\\ramen_mask50.png')
 mask2 = Image.open('img\\ramen_mask120.png')
 
-# 透けない背景画像に半スケを貼る
 
 # out1 = Image.composite(watercolor, im_back, mask2)
 # out2 = Image.composite(kuwahara, out1, mask1)

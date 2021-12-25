@@ -182,15 +182,18 @@ class SLIC:
         return color.lab2rgb(new_img_lab)
 
 
-    def segment_saliency(self, img_path):
+    def segment_saliency(self, saliency_map):
         """ Returns new image saliency ndarray """
 
-        img = cv2.imread(img_path)
+        # img = cv2.imread(img_path)
+        # img = image_cv2
 
         # サリエンシーディテクション
-        saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
-        bool, map = saliency.computeSaliency(img)
-        out = (map * 255).astype("uint8")
+        # saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+        # bool, map = saliency.computeSaliency(img)
+        # out = (map * 255).astype("uint8")
+
+        out = saliency_map
 
         ### save saliency map
         # io.imsave("img\\saliency_out.jpeg", out)
@@ -233,7 +236,7 @@ class SLIC:
 # slic = SLIC(k = 100)
 # img = io.imread("img\\ramen.jpeg")
 # slic.fit(img)
-# res = slic.transform()
+# # res = slic.transform()
 # # saliency = slic.segment_saliency("img\\ramen.jpeg")
 # io.imsave("img\\test.jpeg", res)
 

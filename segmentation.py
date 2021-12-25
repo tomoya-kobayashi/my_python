@@ -17,10 +17,18 @@ def slic_opencv(image_sk, k):
 def slic(image_cv2, var_k=100):
     slic = SLIC(k = var_k)
     slic.fit(image_cv2)
+    a = slic
     res = slic.transform()
-    # saliency = slic.segment_saliency("img\\ramen.jpeg")
     # io.imsave("img\\new_img_saliency.jpeg", res)
-    return res
+    return res, a
+
+
+def slic_saliency(saliency_map, slic):
+    # slic = SLIC(k = 100)
+    # slic.fit(image_cv2)
+    # res = slic.transform()
+    saliency = slic.segment_saliency(saliency_map)
+    return saliency
 
 
 

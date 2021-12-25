@@ -40,15 +40,12 @@ class Application(tkinter.Tk):
         ### アプリのウィンドウのサイズ設定
         self.geometry("1000x430")
 
+        # self.configure(bg='#81BEF7')
+
 
         # １つ目のキャンバスの作成と配置
         self.before_canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height, bg="black")
         self.before_canvas.grid(row=1, column=1)
-
-        # （いずれ消す）２つ目のキャンバスの作成と配置
-        self.after_canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height, bg="black")
-        # self.after_canvas.grid(row=1, column=2)
-
 
 
 
@@ -65,12 +62,12 @@ class Application(tkinter.Tk):
         self.note = ttk.Notebook(self, height=400, width=400)
 
         ### Tab用フレーム作成
-        self.tab1 = tk.Frame(self)
-        self.tab2 = tk.Frame(self)
-        self.tab3 = tk.Frame(self)
-        self.tab4 = tk.Frame(self)
-        self.tab5 = tk.Frame(self)
-        self.tab6 = tk.Frame(self)
+        self.tab1 = tk.Frame(self, background="#E0ECF8")
+        self.tab2 = tk.Frame(self, background="#E0ECF8")
+        self.tab3 = tk.Frame(self, background="#E0ECF8")
+        self.tab4 = tk.Frame(self, background="#E0ECF8")
+        self.tab5 = tk.Frame(self, background="#E0ECF8")
+        self.tab6 = tk.Frame(self, background="#E0ECF8")
 
         ### Tab内のウィジェット作成と配置
         self.tab1_set()
@@ -78,7 +75,7 @@ class Application(tkinter.Tk):
         self.tab3_set()
         self.tab4_set()
         self.tab5_set()
-        self.tab6_set()
+        # self.tab6_set()
 
         ### TabをNotebookに追加
         self.note.add(self.tab1, text="入力画像") 
@@ -86,7 +83,7 @@ class Application(tkinter.Tk):
         self.note.add(self.tab3, text="領域分割") 
         self.note.add(self.tab4, text="領域顕著度") 
         self.note.add(self.tab5, text="塗分け") 
-        self.note.add(self.tab6, text="未定") 
+        # self.note.add(self.tab6, text="未定") 
 
         ### notebookをグリッド
         self.note.grid(row=1, column=2)
@@ -127,14 +124,10 @@ class Application(tkinter.Tk):
         self.saliency_button.pack()
         #############################################################################
 
+        ### for debug
+        # print(cv2.imread("img\\ramen_mask30.png").shape)
 
-        # # 画像オブジェクトの設定（初期はNone）
-        # self.before_image = None
-        # self.after_image = None
 
-        # # キャンバスに描画中の画像（初期はNone）
-        # self.before_canvas_obj= None
-        # self.after_canvas_obj = None
 
 
 
@@ -204,9 +197,17 @@ class Application(tkinter.Tk):
 
         ### 3 : 出力画像をデータオブジェクトに保存（PIL型にしてから）
         self.data.saliency = cv2_to_pil(out)
+
+        ### 3.5 : 画像として一度保存　パスをself.saliency_pathに保存
+        self.saliency_path = "img\\saliency.jpeg"
+        io.imsave(self.saliency_path, out)
         
         ### 4 : ローカル変数imageに保存し、リサイズなどしてキャンバス貼り付け
-        image = self.data.saliency
+        # image = self.data.saliency
+        
+        ### 4.5 : 保存してあった顕著性マップをpilで読み込み
+        image = Image.open(self.saliency_path)
+
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image.width, image.height])
         w_size = int(image.width*(self.canvas_height/2)/max_size)
@@ -245,9 +246,9 @@ class Application(tkinter.Tk):
         print(index, func.__name__)
         ### 2 : スケールバーの値（パラメタ）取得
         parameter = self.scale_bar_tab3.get()
-        ### 3 : 入力に合わせ型変換　該当する関数で領域分割
+        ### 3 : 入力に合わせ型変換　該当する関数で領域分割　領域顕著度で使用するためslicオブジェクトを保存
         image_cv2 = pil_to_cv2(self.data.input)
-        out = func(image_cv2, parameter)
+        out, self.slic = func(image_cv2, parameter)
 
         self.segmentation_path = "img\\segmentation.jpeg"
         io.imsave(self.segmentation_path, out)
@@ -256,11 +257,6 @@ class Application(tkinter.Tk):
         # out_cv2 = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)
         # self.data.segmentation = cv2_to_pil(out)
         # pil_image = Image.fromarray(out)
-
-        # print(out)
-        
-        # height, width, _ = out.shape
-        # # print(h,w,c)
 
         image = Image.open(self.segmentation_path)
         self.data.segmentation = image
@@ -278,12 +274,114 @@ class Application(tkinter.Tk):
             print("tab3 canvas object is deleted!")
         ### 画像をキャンバスに描画
         self.tab3_canvas_obj = self.tab3_canvas.create_image(x, y, image=self.tk_image)
-
     #############################################################################      
 
 
 
+    #############################################################################   
+    def compute_saliency_segmentation(self):
+        # saliency_map = pil_to_cv2(self.data.saliency)
+        # image_cv2 = cv2.imread(self.saliency_path)
+        saliency_map = io.imread(self.saliency_path)
+        out = slic_saliency(saliency_map, self.slic)
+        self.data.saliency_segmentation = out
 
+        self.saliency_segmentation_path = "img\\saliency_segmentation.jpeg"
+        io.imsave(self.saliency_segmentation_path, out)
+
+        image = Image.open(self.saliency_segmentation_path)
+        # self.data.segmentation = image
+        ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
+        max_size = max([image.width, image.height])
+        w_size = int(image.width * (self.canvas_height / 2) / max_size)
+        h_size = int(image.height * (self.canvas_height / 2) / max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+        ### 画像の描画位置を1/2キャンバス中心に調節
+        x = int(self.canvas_width / 4)
+        y = int(self.canvas_height / 4)
+        ### キャンバスに描画中の画像を削除
+        if self.tab4_canvas_obj is not None:
+            self.tab4_canvas.delete(self.tab4_canvas_obj)
+            print("tab4 canvas object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab4_canvas_obj = self.tab4_canvas.create_image(x, y, image=self.tk_image)
+
+
+
+
+    def compute_masked_image(self, event):
+        ### 1 : スケールバーの値（パラメタ）取得
+        threshold = self.scale_bar_tab4.get()
+
+        image = cv2.imread(self.saliency_segmentation_path)
+        mask1 = self.mask(image, threshold)
+        mask2 = cv2.bitwise_not(mask1)
+        self.mask1_path = "img\\mask1.png"
+        self.mask2_path = "img\\mask2.png"
+        cv2.imwrite(self.mask1_path, mask1)
+        cv2.imwrite(self.mask2_path, mask2)
+
+        h, w, _ = image.shape
+
+        ### 真っ黒な画像（ベース）
+        blank = np.zeros((h, w, 3))
+        cv2.imwrite('blank.jpeg', blank)
+
+        input = Image.open(self.data.input_path)
+        base = Image.open("blank.jpeg")
+        mask1 = Image.open(self.mask1_path)
+        mask2 = Image.open(self.mask2_path)
+        
+
+        out1 = Image.composite(base, input, mask1)
+        out2 = Image.composite(base, input, mask2)
+        
+        self.masked_image1_path = "img\\masked_image1.jpeg"
+        self.masked_image2_path = "img\\masked_image2.jpeg"
+        out1.save(self.masked_image1_path)
+        out2.save(self.masked_image2_path)
+        
+
+        image1 = Image.open(self.masked_image1_path)
+        # self.data.segmentation = image
+        ### 最大辺を基準に「ミニ」キャンバスサイズの1/2に合うようリサイズ
+        max_size = max([image1.width, image1.height])
+        w_size = int(image1.width * 130 / max_size)
+        h_size = int(image1.height * 130 / max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image1.resize((w_size,h_size)))
+        ### 画像の描画位置を1/2キャンバス中心に調節
+        x = int(130 / 2)
+        y = int(130 / 2)
+        ### キャンバスに描画中の画像を削除
+        if self.tab4_minicanvas1_obj is not None:
+            self.tab4_minicanvas1.delete(self.tab4_minicanvas1_obj)
+            print("tab4 minicanvas1 object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab4_minicanvas1_obj = self.tab4_minicanvas1.create_image(x, y, image=self.tk_image)
+
+
+
+        image2 = Image.open(self.masked_image2_path)
+        self.tk_image2 = ImageTk.PhotoImage(image=image2.resize((w_size,h_size)))
+        ### キャンバスに描画中の画像を削除
+        if self.tab4_minicanvas2_obj is not None:
+            self.tab4_minicanvas2.delete(self.tab4_minicanvas2_obj)
+            print("tab4 minicanvas2 object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab4_minicanvas2_obj = self.tab4_minicanvas2.create_image(x, y, image=self.tk_image2)
+
+
+
+    def mask(self, image, threshold):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, binary = cv2.threshold(image, threshold, 255, cv2.THRESH_BINARY)
+        return binary
+    #############################################################################   
+
+
+
+    def test(self, event):
+        pass
 
     def compute_Kuwahara(self, event):
         a = self.scale_bar2.get()
@@ -363,7 +461,7 @@ class Application(tkinter.Tk):
         self.saliency_combobox.bind("<<ComboboxSelected>>", self.compute_saliency)
 
 
-        ### 入力画像表示用キャンバス
+        ### 画像表示用キャンバス
         self.tab2_canvas = tk.Canvas(self.tab2, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
         self.tab2_canvas.pack()
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
@@ -385,7 +483,7 @@ class Application(tkinter.Tk):
         self.segmentation_combobox.bind("<<ComboboxSelected>>", self.compute_segmentation)
 
 
-        ### 入力画像表示用キャンバス
+        ### 画像表示用キャンバス
         self.tab3_canvas = tk.Canvas(self.tab3, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
         self.tab3_canvas.pack()
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
@@ -400,20 +498,128 @@ class Application(tkinter.Tk):
         #マウスを離したときにcompute_segmentation実行
         self.scale_bar_tab3.bind("<ButtonRelease>", self.compute_segmentation)
 
+
     
     """Tab4のウィジェット作成関数【領域顕著度】"""
     def tab4_set(self):
-        pass
+        ### 領域顕著度計算ボタン
+        self.saliency_segmentation_button = tkinter.Button(
+            self.tab4,
+            text="saliency segmentation",
+            command=self.compute_saliency_segmentation
+        )
+        self.saliency_segmentation_button.pack()
+
+
+        ### 画像表示用キャンバス
+        self.tab4_canvas = tk.Canvas(self.tab4, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
+        self.tab4_canvas.pack()
+        # 画像オブジェクトの設定（初期はNone）⇒これ使う？
+        self.tab4_image = None
+        ### キャンバスに描画中の画像（初期はNone）
+        self.tab4_canvas_obj= None
+
+        ### スケールバー 作成と配置
+        self.scale_bar_tab4 = tk.Scale(self.tab4, orient=tkinter.HORIZONTAL, from_=0, to=255, variable=50)
+        self.scale_bar_tab4.set(100)
+        self.scale_bar_tab4.pack()
+        #マウスを離したときにcompute_masked_image実行
+        self.scale_bar_tab4.bind("<ButtonRelease>", self.compute_masked_image)
+
+        ### マスク画像貼り付け用フレーム
+        self.minicanvas_frame = tk.Frame(self.tab4, height=150,width=400, background="gray")
+        self.minicanvas_frame.pack() 
+
+        ### マスク適用画像キャンバス１
+        self.tab4_minicanvas1 = tk.Canvas(self.minicanvas_frame, width=130, height=130, bg="black")
+        self.tab4_minicanvas1.grid(column=0, row=0)
+        # 画像オブジェクトの設定（初期はNone）⇒これ使う？
+        self.tab4_minicanvas1_image = None
+        ### キャンバスに描画中の画像（初期はNone）
+        self.tab4_minicanvas1_obj= None
+
+        ### マスク適用画像キャンバス２
+        self.tab4_minicanvas2 = tk.Canvas(self.minicanvas_frame, width=130, height=130, bg="black")
+        self.tab4_minicanvas2.grid(column=1, row=0)
+        # 画像オブジェクトの設定（初期はNone）⇒これ使う？
+        self.tab4_minicanvas2_image = None
+        ### キャンバスに描画中の画像（初期はNone）
+        self.tab4_minicanvas2_obj= None
+
 
     
     """Tab5のウィジェット作成関数【塗分け】"""
     def tab5_set(self):
-        pass
+        ### ペイント1の画像貼り付け用フレーム
+        self.paint_frame1 = tk.Frame(self.tab5, height=200,width=200, background="gray")
+        self.paint_frame1.grid(row=0, column=0)
+        ### ペイント2の画像貼り付け用フレーム
+        self.paint_frame2 = tk.Frame(self.tab5, height=200,width=200, background="gray")
+        self.paint_frame2.grid(row=1, column=0)
+        ### ペイント1のボタン用フレーム
+        self.button_frame1 = tk.Frame(self.tab5, height=200,width=200, background="#E0ECF8")
+        self.button_frame1.grid(row=0, column=1)
+        ### ペイント2のボタン用フレーム
+        self.button_frame2 = tk.Frame(self.tab5, height=200,width=200, background="#E0ECF8")
+        self.button_frame2.grid(row=1, column=1)
+
+
+        ### 画像表示用キャンバス
+        self.tab5_canvas1 = tk.Canvas(self.paint_frame1, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
+        self.tab5_canvas1.pack()
+        # 画像オブジェクトの設定（初期はNone）⇒これ使う？
+        self.tab5_image1 = None
+        ### キャンバスに描画中の画像（初期はNone）
+        self.tab5_canvas1_obj= None
+
+        ### 画像表示用キャンバス
+        self.tab5_canvas2 = tk.Canvas(self.paint_frame2, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
+        self.tab5_canvas2.pack()
+        # 画像オブジェクトの設定（初期はNone）⇒これ使う？
+        self.tab5_image2 = None
+        ### キャンバスに描画中の画像（初期はNone）
+        self.tab5_canvas2_obj= None
+
+
+
+        ### comboboxのオブジェクト生成　リスト指定
+        self.paint_combobox1 = ttk.Combobox(self.button_frame1, values=self.segmentation_name_list)
+        ### comboboxの貼り付け
+        self.paint_combobox1.pack()
+        ### comboboxの初期値設定変更（index=1が初期値）
+        # self.saliency_combobox.current(0)
+        ### 【重要】プルダウン選択時に呼び出す関数をバインド
+        self.paint_combobox1.bind("<<ComboboxSelected>>", self.test)
+
+        ### スケールバー 作成と配置
+        self.scale_bar1_tab5 = tk.Scale(self.button_frame1, orient=tkinter.HORIZONTAL, from_=0, to=21)
+        self.scale_bar1_tab5.set(7)
+        self.scale_bar1_tab5.pack()
+        #マウスを離したときにcompute_segmentation実行
+        self.scale_bar1_tab5.bind("<ButtonRelease>", self.test)
+
+
+        ### comboboxのオブジェクト生成　リスト指定
+        self.paint_combobox2 = ttk.Combobox(self.button_frame2, values=self.segmentation_name_list)
+        ### comboboxの貼り付け
+        self.paint_combobox2.pack()
+        ### comboboxの初期値設定変更（index=1が初期値）
+        # self.saliency_combobox.current(0)
+        ### 【重要】プルダウン選択時に呼び出す関数をバインド
+        self.paint_combobox2.bind("<<ComboboxSelected>>", self.test)
+
+
+        ### スケールバー 作成と配置
+        self.scale_bar2_tab5 = tk.Scale(self.button_frame2, orient=tkinter.HORIZONTAL, from_=0, to=200, variable=100)
+        self.scale_bar2_tab5.set(100)
+        self.scale_bar2_tab5.pack()
+        #マウスを離したときにcompute_segmentation実行
+        self.scale_bar2_tab5.bind("<ButtonRelease>", self.test)
 
     
     """Tab6のウィジェット作成関数【未定】"""
-    def tab6_set(self):
-        pass
+    # def tab6_set(self):
+    #     pass
 
 
 
