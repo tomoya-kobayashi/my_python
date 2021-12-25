@@ -102,6 +102,10 @@ class Application(tkinter.Tk):
         self.synthesize_button = tkinter.Button(self, text="合成", command=self.synthesize_layers)
         self.synthesize_button.grid(row=2, column=1)
         
+        # 名前を付けて保存ボタン作成と配置
+        self.save_as_button = tkinter.Button(self, text="名前を付けて保存", command=self.save_as)
+        self.save_as_button.grid(row=3, column=1)
+
         # 設定保存ボタンの作成と配置
         self.save_config_button = tkinter.Button(self, text="設定保存", command=self.save_config)
         self.save_config_button.grid(row=2, column=2)
@@ -583,7 +587,7 @@ class Application(tkinter.Tk):
         ### comboboxの貼り付け
         self.segmentation_combobox.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
-        # self.saliency_combobox.current(0)
+        self.segmentation_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.segmentation_combobox.bind("<<ComboboxSelected>>", self.compute_segmentation)
 
@@ -692,7 +696,7 @@ class Application(tkinter.Tk):
         ### comboboxの貼り付け
         self.paint_combobox1.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
-        # self.saliency_combobox.current(0)
+        self.paint_combobox1.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.paint_combobox1.bind("<<ComboboxSelected>>", self.compute_paint1)
 
@@ -709,7 +713,7 @@ class Application(tkinter.Tk):
         ### comboboxの貼り付け
         self.paint_combobox2.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
-        # self.saliency_combobox.current(0)
+        self.paint_combobox2.current(1)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.paint_combobox2.bind("<<ComboboxSelected>>", self.compute_paint2)
 
@@ -727,12 +731,17 @@ class Application(tkinter.Tk):
     #     pass
 
 
-
-    """いらないかも"""
-    def save(self):
-        global data
-        data = self.data
-
+    """名前を付けて保存（fileダイアログ表示⇒パス取得⇒表示中の画像保存）"""
+    def save_as(self):
+        filename = tk.filedialog.asksaveasfilename(
+            title = "名前を付けて保存",
+            filetypes = [("PNG", ".png"), ("JPEG", ".jpg"), ("Tiff", ".tif"), ("Bitmap", ".bmp")], # ファイルフィルタ
+            initialdir = "./", # 自分自身のディレクトリ
+            defaultextension = "png"
+        )
+        print(filename)
+        image = io.imread(self.out_path)
+        io.imsave(filename, image)
 
     #################################################################################
 
