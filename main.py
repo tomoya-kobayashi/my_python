@@ -6,7 +6,8 @@ import tkinter.ttk as ttk
 import tkinter.filedialog
 from PIL import Image,ImageTk
 from skimage import io, segmentation, color
-
+import glob
+import os.path
 
 from Data import Data
 from config import Config
@@ -26,7 +27,11 @@ config.saliency_func_index
 """
 
 tk_images = []
-config_dict_list = ["default_1", "my_config_1"]
+config_dict_list = []
+for f in glob.glob("config\\*.json"):
+    config_dict_list.append(os.path.basename(f)[0:-5])
+
+print(config_dict_list)
 
 
 
@@ -126,12 +131,12 @@ class Application(tkinter.Tk):
         ### comboboxの貼り付け
         self.config_combobox.grid(row=3, column=2)
         ### comboboxの初期値設定変更（index=1が初期値）
-        # self.saliency_combobox.current(0)
+        self.config_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.config_combobox.bind("<<ComboboxSelected>>", self.compute_all)
 
-        # 設定保存ボタンの作成と配置
-        self.default_button = tkinter.Button(self, text="おまかせ", command=self.save_config)
+        # おまかせボタンの作成と配置
+        self.default_button = tkinter.Button(self, text="おまかせ", command=self.compute_all)
         self.default_button.grid(row=4, column=2)
 
 
@@ -592,12 +597,35 @@ class Application(tkinter.Tk):
 
 
 
-    def compute_all(self):
-        pass
+    def compute_all(self, event):
+        index = self.config_combobox.current()
+        # print("{}.json".format(config_dict_list[index]))
+        dict = self.config.load_para_from_json("config\\{}.json".format(config_dict_list[index]))
+        self.config.update_param(dict)
+        if self.file_path is None:
+            print("入力がありません")
+            return
+        self.compute_saliency()
+        self.compute_segmentation()
+        self.compute_saliency_segmentation()
+        self.compute_masked_image()
+        self.compute_paint1()
+        self.compute_paint2()
+        self.synthesize_layers()
 
 
-    def save_config(self, event):
-        pass
+    def save_config(self):
+        filename = tk.filedialog.asksaveasfilename(
+            title = "名前を付けて保存",
+            initialdir = "config\\", # 自分自身のディレクトリ
+            defaultextension = "json"
+        )
+        self.config.name = filename
+        self.config.make_json(filename)
+        config_dict_list.append(os.path.basename(filename)[0:-5])
+        print(os.path.basename(filename)[0:-5])
+        self.config_combobox['values'] = config_dict_list
+        
 
 
     def getNoteName(self,event):

@@ -1,5 +1,5 @@
 {
-    "name"                            : "デフォルト１",
+    "name"                            : "default_1",
     "saliency_func_index"             : 0,
     "segmentation_func_index"         : 0,
     "segmentation_k"                  : 100,

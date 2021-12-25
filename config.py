@@ -1,5 +1,6 @@
 import json
-
+from pathlib import Path
+import shutil
 
 class Config():
     def __init__(self,
@@ -65,5 +66,28 @@ class Config():
             'paint2_func_parameter'           : self.paint2_func_parameter
         }
 
+    def update_self_dict(self):
+        self.config_dict = {
+            'name'                            : self.name,
+            'saliency_func_index'             : self.saliency_func_index,
+            'segmentation_func_index'         : self.segmentation_func_index,
+            'segmentation_k'                  : self.segmentation_k,
+            'segmentation_saliency_threshold' : self.segmentation_saliency_threshold,
+            'paint1_func_index'               : self.paint1_func_index,
+            'paint1_func_parameter'           : self.paint2_func_index,
+            'paint2_func_index'               : self.paint2_func_index,
+            'paint2_func_parameter'           : self.paint2_func_parameter
+        }
 
+
+
+    def make_json(self, dst_path):
+        ### 複製元のパス
+        src_path = "Config\\default_1.json"
+        ### jsonファイルを複製
+        shutil.copyfile(src_path, dst_path)
+        self.update_self_dict()
+        with open(dst_path, 'w') as fp:
+            json.dump(self.config_dict, fp)
+        
 
