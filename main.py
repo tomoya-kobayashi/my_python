@@ -16,16 +16,11 @@ from segmentation import *
 from paint import *
 
 
-"""
-拡張子は今後.jpegではなく.jpgで統一
-透過画像を使うため、.pngのほうが都合よさそう。
-変換後はすべてpngとして保存できるといい
-
-"""
-
 
 data = Data()
 
+tk_images = []
+config_list = dict()
 
 class Application(tkinter.Tk):
     def __init__(self):
@@ -34,19 +29,24 @@ class Application(tkinter.Tk):
         ### dataクラスのオブジェクトをインスタンス変数に取り込む（以降こちらを変更）
         self.data = data
 
+        global tk_images
 
         ### キャンバスのサイズ
         self.canvas_width = 400
         self.canvas_height = 400
         ### アプリのウィンドウのサイズ設定
-        self.geometry("1000x430")
+        self.geometry("820x480")
 
         # self.configure(bg='#81BEF7')
 
 
         # １つ目のキャンバスの作成と配置
-        self.before_canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height, bg="black")
-        self.before_canvas.grid(row=1, column=1)
+        self.out_canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height, bg="black")
+        self.out_canvas.grid(row=1, column=1)
+        # 画像オブジェクトの設定（初期はNone）⇒これ使う？
+        self.out_image = None
+        ### キャンバスに描画中の画像（初期はNone）
+        self.out_canvas_obj= None
 
 
 
@@ -89,42 +89,33 @@ class Application(tkinter.Tk):
 
         ### notebookをグリッド
         self.note.grid(row=1, column=2)
-
         #############################################################################
 
 
 
-
-        #############################################################################
-        ### いずれ消すウィジェットたち
 
         # ボタンを配置するフレームの作成と配置
-        self.button_frame = tkinter.Frame()
-        self.button_frame.grid(row=1, column=3)
+        # self.button_frame = tkinter.Frame()
+        # self.button_frame.grid(row=1, column=3)
 
-        # ファイル読み込みボタンの作成と配置
-        self.load_button = tkinter.Button(self.button_frame, text="ファイル選択", command=self.push_load_button)
-        self.load_button.pack()
+        # レイヤ合成ボタンの作成と配置
+        self.synthesize_button = tkinter.Button(self, text="合成", command=self.synthesize_layers)
+        self.synthesize_button.grid(row=2, column=1)
+        
+        # 設定保存ボタンの作成と配置
+        self.save_config_button = tkinter.Button(self, text="設定保存", command=self.save_config)
+        self.save_config_button.grid(row=2, column=2)
 
-        #　スケールバー1 作成と配置
-        self.scale_bar1 = tkinter.Scale(self.button_frame, orient=tkinter.HORIZONTAL)
-        self.scale_bar1.pack()
-        #マウスを離したときにSLIC実行
-        self.scale_bar1.bind("<ButtonRelease>", slic)
+        ### comboboxのオブジェクト生成　リスト指定
+        self.config_combobox = ttk.Combobox(self, values=self.segmentation_name_list)
+        ### comboboxの貼り付け
+        self.config_combobox.grid(row=3, column=2)
+        ### comboboxの初期値設定変更（index=1が初期値）
+        # self.saliency_combobox.current(0)
+        ### 【重要】プルダウン選択時に呼び出す関数をバインド
+        self.segmentation_combobox.bind("<<ComboboxSelected>>", self.compute_segmentation)
 
-        #　スケールバー2 作成と配置
-        self.scale_bar2 = tkinter.Scale(self.button_frame, orient=tkinter.HORIZONTAL)
-        self.scale_bar2.pack()
-        #  マウスを離したときに桑原フィルタ実行
-        self.scale_bar2.bind("<ButtonRelease>", self.compute_Kuwahara)
 
-        self.saliency_button = tkinter.Button(
-            self.button_frame,
-            text="saliency map",
-            command=self.compute_saliency
-        )
-        self.saliency_button.pack()
-        #############################################################################
 
         ### for debug
         # print(cv2.imread("img\\ramen_mask30.png").shape)
@@ -141,6 +132,7 @@ class Application(tkinter.Tk):
     #############################################################################
     """【Tab1】ファイル選択ボタンが押された時の処理"""
     def push_load_button(self):
+
         # ファイル選択画面を表示
         self.file_path = tkinter.filedialog.askopenfilename(
             initialdir="."
@@ -148,7 +140,7 @@ class Application(tkinter.Tk):
 
         if len(self.file_path) != 0:
             ###データオブジェクトに入力画像のパスを保存（本当はリサイズ後がいい）
-            self.data.input_path = self.file_path
+            # self.data.input_path = self.file_path
             ### 画像読み込み（jpgも扱うためPILからImageTk使用）
             image = Image.open(self.file_path)
             
@@ -157,9 +149,17 @@ class Application(tkinter.Tk):
             w_size = int(image.width*(self.canvas_height/2)/max_size)
             h_size = int(image.height*(self.canvas_height/2)/max_size)
             self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+            ### グローバル変数のリストに保存（キャンバスに画像保持）
+            tk_images.append(self.tk_image)
+
+            w_resize = int(image.width*500/max_size)
+            h_resize = int(image.height*500/max_size)
+            image_resize = image.resize((w_resize, h_resize))
+            self.file_path = "img\\input.jpeg"
+            image_resize.save(self.file_path)
 
             ### 読み込んだ画像をデータオブジェクトに保存（型：PIL）
-            self.data.input = image
+            # self.data.input = image
 
             ### 画像の描画位置を1/2キャンバス中心に調節
             x = int(self.canvas_width / 4)
@@ -194,7 +194,8 @@ class Application(tkinter.Tk):
         print(index, func.__name__)
 
         ### 2 : 入力に合わせ型変換　該当する関数で顕著度計算
-        image_cv2 = pil_to_cv2(self.data.input)
+        # image_cv2 = pil_to_cv2(self.data.input)
+        image_cv2 = cv2.imread(self.file_path)
         out = func(image_cv2)
 
         ### 3 : 出力画像をデータオブジェクトに保存（PIL型にしてから）
@@ -215,6 +216,10 @@ class Application(tkinter.Tk):
         w_size = int(image.width*(self.canvas_height/2)/max_size)
         h_size = int(image.height*(self.canvas_height/2)/max_size)
         self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
+
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 4)
         y = int(self.canvas_height / 4)
@@ -249,7 +254,8 @@ class Application(tkinter.Tk):
         ### 2 : スケールバーの値（パラメタ）取得
         parameter = self.scale_bar_tab3.get()
         ### 3 : 入力に合わせ型変換　該当する関数で領域分割　領域顕著度で使用するためslicオブジェクトを保存
-        image_cv2 = pil_to_cv2(self.data.input)
+        # image_cv2 = pil_to_cv2(self.data.input)
+        image_cv2 = cv2.imread(self.file_path)
         out, self.slic = func(image_cv2, parameter)
 
         self.segmentation_path = "img\\segmentation.jpeg"
@@ -267,6 +273,10 @@ class Application(tkinter.Tk):
         w_size = int(image.width * (self.canvas_height / 2) / max_size)
         h_size = int(image.height * (self.canvas_height / 2) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
+
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 4)
         y = int(self.canvas_height / 4)
@@ -298,6 +308,10 @@ class Application(tkinter.Tk):
         w_size = int(image.width * (self.canvas_height / 2) / max_size)
         h_size = int(image.height * (self.canvas_height / 2) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
+
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 4)
         y = int(self.canvas_height / 4)
@@ -329,7 +343,7 @@ class Application(tkinter.Tk):
         blank = np.zeros((h, w, 3))
         cv2.imwrite('blank.jpeg', blank)
 
-        input = Image.open(self.data.input_path)
+        input = Image.open(self.file_path)
         base = Image.open("blank.jpeg")
         mask1 = Image.open(self.mask1_path)
         mask2 = Image.open(self.mask2_path)
@@ -351,6 +365,8 @@ class Application(tkinter.Tk):
         w_size = int(image1.width * 130 / max_size)
         h_size = int(image1.height * 130 / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image1.resize((w_size,h_size)))
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(130 / 2)
         y = int(130 / 2)
@@ -365,6 +381,8 @@ class Application(tkinter.Tk):
 
         image2 = Image.open(self.masked_image2_path)
         self.tk_image2 = ImageTk.PhotoImage(image=image2.resize((w_size,h_size)))
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image2)
         ### キャンバスに描画中の画像を削除
         if self.tab4_minicanvas2_obj is not None:
             self.tab4_minicanvas2.delete(self.tab4_minicanvas2_obj)
@@ -410,6 +428,8 @@ class Application(tkinter.Tk):
         w_size = int(image1.width * (self.canvas_height / 2) / max_size)
         h_size = int(image1.height * (self.canvas_height / 2) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image1.resize((w_size,h_size)))
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 4)
         y = int(self.canvas_height / 4)
@@ -450,6 +470,8 @@ class Application(tkinter.Tk):
         w_size = int(image2.width * (self.canvas_height / 2) / max_size)
         h_size = int(image2.height * (self.canvas_height / 2) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image2.resize((w_size,h_size)))
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
         ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 4)
         y = int(self.canvas_height / 4)
@@ -464,45 +486,43 @@ class Application(tkinter.Tk):
 
 
 
+    def synthesize_layers(self):
+        paint1 = Image.open(self.paint1_path)
+        paint2 = Image.open(self.paint2_path)
+        mask = Image.open(self.mask1_path)
+        out = Image.composite(paint2, paint1, mask)
+        # out1 = Image.composite(watercolor, kuwahara, mask1)
+        
+        self.out_path = "img\\output.jpeg"
+        out.save(self.out_path)
 
-    def test(self, event):
-        pass
+        image = Image.open(self.out_path)
+        # self.data.segmentation = image
+        ### 最大辺を基準にキャンバスサイズに合うようリサイズ
+        max_size = max([image.width, image.height])
+        w_size = int(image.width * self.canvas_height / max_size)
+        h_size = int(image.height * self.canvas_height / max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
 
-    def compute_Kuwahara(self, event):
-        a = self.scale_bar2.get()
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
 
-        img = cv2.imread(self.file_path)
-
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        out = Kuwahara(img_rgb,a,True,0.5)
-
-        io.imsave("C:\\Users\\mieli\\my_python\\img\\kuwahara_out.jpeg", out)
-
-        # 画像の描画位置を調節
+        ### 画像の描画位置を1/2キャンバス中心に調節
         x = int(self.canvas_width / 2)
         y = int(self.canvas_height / 2)
-
-        #画像削除
-        if self.after_canvas_obj is not None:
-            self.after_canvas.delete(self.after_canvas_obj)
-
-        image = Image.open("C:\\Users\\mieli\\my_python\\img\\kuwahara_out.jpeg")
-        w_size = int(image.width/4)
-        h_size = int(image.height/4)
-        tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
-        self.after_image = tk_image
-
-        # 画像を2つ目のキャンバスに描画
-        self.after_canvas_obj = self.after_canvas.create_image(
-            x, y,
-            image=self.after_image
-        )
+        ### キャンバスに描画中の画像を削除
+        if self.out_canvas_obj is not None:
+            self.out_canvas.delete(self.out_canvas_obj)
+            print("out canvas object is deleted!")
+        ### 画像をキャンバスに描画
+        self.out_canvas_obj = self.out_canvas.create_image(x, y, image=self.tk_image)
 
 
-    def test(self, event):
-        a = self.scale_bar.get()
-        print(a)
+
+
+    def save_config(self, event):
+        pass
+
 
     def getNoteName(self,event):
         note =event.widget
