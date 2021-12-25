@@ -13,6 +13,7 @@ from kuwahara2 import Kuwahara
 from my_convert import *
 from saliency import *
 from segmentation import *
+from paint import *
 
 
 """
@@ -54,7 +55,8 @@ class Application(tkinter.Tk):
         self.saliency_name_list = [itti_saliency.__name__, itti_saliency.__name__]
         self.segmentation_func_list = [slic, slic_opencv]
         self.segmentation_name_list = [slic.__name__, slic_opencv.__name__]
-
+        self.paint_func_list = [kuwahara, watercolor, pencil]
+        self.paint_name_list = [kuwahara.__name__, watercolor.__name__, pencil.__name__]
 
 
         #############################################################################
@@ -380,6 +382,89 @@ class Application(tkinter.Tk):
 
 
 
+    #############################################################################   
+    def compute_paint1(self, event):
+        ### 1 : index取得　関数取得
+        index = self.paint_combobox1.current()
+        func = self.paint_func_list[index]
+        print(index, func.__name__)
+        ### 2 : スケールバーの値（パラメタ）取得
+        parameter = self.scale_bar1_tab5.get()
+        ### 3 : 該当する関数でペイント
+        out = func(self.file_path, parameter)
+        self.paint1_path = "img\\paint1.jpeg"
+        io.imsave(self.paint1_path, out)
+        ### 4 : マスク参照して切り取ったペイント画像表示
+        paint1 = Image.open(self.paint1_path)
+        base = Image.open("blank.jpeg")
+        mask1 = Image.open(self.mask1_path)
+        out1 = Image.composite(base, paint1, mask1)
+        ### 5 : 作成した画像をpaint1レイヤとして保存
+        self.paint1_layer_path = "img\\paint1_layer.jpeg"
+        out1.save(self.paint1_layer_path)
+        
+        image1 = Image.open(self.paint1_layer_path)
+        # self.data.segmentation = image
+        ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
+        max_size = max([image1.width, image1.height])
+        w_size = int(image1.width * (self.canvas_height / 2) / max_size)
+        h_size = int(image1.height * (self.canvas_height / 2) / max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image1.resize((w_size,h_size)))
+        ### 画像の描画位置を1/2キャンバス中心に調節
+        x = int(self.canvas_width / 4)
+        y = int(self.canvas_height / 4)
+        ### キャンバスに描画中の画像を削除
+        if self.tab5_canvas1_obj is not None:
+            self.tab5_canvas1.delete(self.tab5_canvas1_obj)
+            print("tab5 canvas1 object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab5_canvas1_obj = self.tab5_canvas1.create_image(x, y, image=self.tk_image)
+
+
+
+
+    def compute_paint2(self, event):
+        ### 1 : index取得　関数取得
+        index = self.paint_combobox2.current()
+        func = self.paint_func_list[index]
+        print(index, func.__name__)
+        ### 2 : スケールバーの値（パラメタ）取得
+        parameter = self.scale_bar2_tab5.get()
+        ### 3 : 該当する関数でペイント
+        out = func(self.file_path, parameter)
+        self.paint2_path = "img\\paint2.jpeg"
+        io.imsave(self.paint2_path, out)
+        ### 4 : マスク参照して切り取ったペイント画像表示
+        paint2 = Image.open(self.paint2_path)
+        base = Image.open("blank.jpeg")
+        mask1 = Image.open(self.mask2_path)
+        out1 = Image.composite(base, paint2, mask1)
+        ### 5 : 作成した画像をpaint1レイヤとして保存
+        self.paint2_layer_path = "img\\paint2_layer.jpeg"
+        out1.save(self.paint2_layer_path)
+        
+        image2 = Image.open(self.paint2_layer_path)
+        # self.data.segmentation = image
+        ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
+        max_size = max([image2.width, image2.height])
+        w_size = int(image2.width * (self.canvas_height / 2) / max_size)
+        h_size = int(image2.height * (self.canvas_height / 2) / max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image2.resize((w_size,h_size)))
+        ### 画像の描画位置を1/2キャンバス中心に調節
+        x = int(self.canvas_width / 4)
+        y = int(self.canvas_height / 4)
+        ### キャンバスに描画中の画像を削除
+        if self.tab5_canvas2_obj is not None:
+            self.tab5_canvas2.delete(self.tab5_canvas2_obj)
+            print("tab5 canvas2 object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab5_canvas2_obj = self.tab5_canvas2.create_image(x, y, image=self.tk_image)
+
+    #############################################################################   
+
+
+
+
     def test(self, event):
         pass
 
@@ -583,38 +668,38 @@ class Application(tkinter.Tk):
 
 
         ### comboboxのオブジェクト生成　リスト指定
-        self.paint_combobox1 = ttk.Combobox(self.button_frame1, values=self.segmentation_name_list)
+        self.paint_combobox1 = ttk.Combobox(self.button_frame1, values=self.paint_name_list)
         ### comboboxの貼り付け
         self.paint_combobox1.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
         # self.saliency_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.paint_combobox1.bind("<<ComboboxSelected>>", self.test)
+        self.paint_combobox1.bind("<<ComboboxSelected>>", self.compute_paint1)
 
         ### スケールバー 作成と配置
         self.scale_bar1_tab5 = tk.Scale(self.button_frame1, orient=tkinter.HORIZONTAL, from_=0, to=21)
         self.scale_bar1_tab5.set(7)
         self.scale_bar1_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
-        self.scale_bar1_tab5.bind("<ButtonRelease>", self.test)
+        self.scale_bar1_tab5.bind("<ButtonRelease>", self.compute_paint1)
 
 
         ### comboboxのオブジェクト生成　リスト指定
-        self.paint_combobox2 = ttk.Combobox(self.button_frame2, values=self.segmentation_name_list)
+        self.paint_combobox2 = ttk.Combobox(self.button_frame2, values=self.paint_name_list)
         ### comboboxの貼り付け
         self.paint_combobox2.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
         # self.saliency_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.paint_combobox2.bind("<<ComboboxSelected>>", self.test)
+        self.paint_combobox2.bind("<<ComboboxSelected>>", self.compute_paint2)
 
 
         ### スケールバー 作成と配置
-        self.scale_bar2_tab5 = tk.Scale(self.button_frame2, orient=tkinter.HORIZONTAL, from_=0, to=200, variable=100)
-        self.scale_bar2_tab5.set(100)
+        self.scale_bar2_tab5 = tk.Scale(self.button_frame2, orient=tkinter.HORIZONTAL, from_=0, to=100)
+        self.scale_bar2_tab5.set(13)
         self.scale_bar2_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
-        self.scale_bar2_tab5.bind("<ButtonRelease>", self.test)
+        self.scale_bar2_tab5.bind("<ButtonRelease>", self.compute_paint2)
 
     
     """Tab6のウィジェット作成関数【未定】"""
