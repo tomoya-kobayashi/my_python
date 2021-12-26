@@ -9,10 +9,10 @@ class Config():
         segmentation_func_index         = 0,
         segmentation_k                  = 100,
         segmentation_saliency_threshold = 50,
-        paint1_func_index               = 0,
-        paint1_func_parameter           = 7,
-        paint2_func_index               = 1,
-        paint2_func_parameter           = 30
+        paint1_func_index               = 1,
+        paint1_func_parameter           = 18,
+        paint2_func_index               = 0,
+        paint2_func_parameter           = 4
     ):
         self.name                            = name
         self.saliency_func_index             = saliency_func_index
@@ -31,7 +31,7 @@ class Config():
             'segmentation_k'                  : self.segmentation_k,
             'segmentation_saliency_threshold' : self.segmentation_saliency_threshold,
             'paint1_func_index'               : self.paint1_func_index,
-            'paint1_func_parameter'           : self.paint2_func_index,
+            'paint1_func_parameter'           : self.paint1_func_parameter,
             'paint2_func_index'               : self.paint2_func_index,
             'paint2_func_parameter'           : self.paint2_func_parameter
         }
@@ -61,7 +61,7 @@ class Config():
             'segmentation_k'                  : self.segmentation_k,
             'segmentation_saliency_threshold' : self.segmentation_saliency_threshold,
             'paint1_func_index'               : self.paint1_func_index,
-            'paint1_func_parameter'           : self.paint2_func_index,
+            'paint1_func_parameter'           : self.paint1_func_parameter,
             'paint2_func_index'               : self.paint2_func_index,
             'paint2_func_parameter'           : self.paint2_func_parameter
         }
@@ -74,7 +74,7 @@ class Config():
             'segmentation_k'                  : self.segmentation_k,
             'segmentation_saliency_threshold' : self.segmentation_saliency_threshold,
             'paint1_func_index'               : self.paint1_func_index,
-            'paint1_func_parameter'           : self.paint2_func_index,
+            'paint1_func_parameter'           : self.paint1_func_parameter,
             'paint2_func_index'               : self.paint2_func_index,
             'paint2_func_parameter'           : self.paint2_func_parameter
         }

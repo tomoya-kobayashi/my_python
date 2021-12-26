@@ -47,13 +47,17 @@ class Application(tkinter.Tk):
         global config_dict_list
         self.config = Config()
 
-        ### キャンバスのサイズ
-        self.canvas_width = 400
-        self.canvas_height = 400
-        ### アプリのウィンドウのサイズ設定
-        self.geometry("820x510")
+        self.colors = []
+        self.colors.append("#E0ECF8")
+        self.colors.append("#EAB947")
 
-        # self.configure(bg='#81BEF7')
+        ### キャンバスのサイズ
+        self.canvas_width = 600
+        self.canvas_height = 600
+        ### アプリのウィンドウのサイズ設定
+        self.geometry("1220x720")
+
+        # self.configure(bg=self.colors[0])
 
 
         # １つ目のキャンバスの作成と配置
@@ -77,15 +81,16 @@ class Application(tkinter.Tk):
 
         #############################################################################
         ### Notebook作成
-        self.note = ttk.Notebook(self, height=400, width=400)
-
+        self.note = ttk.Notebook(self, height=578, width=600)
+        
         ### Tab用フレーム作成
-        self.tab1 = tk.Frame(self, background="#E0ECF8")
-        self.tab2 = tk.Frame(self, background="#E0ECF8")
-        self.tab3 = tk.Frame(self, background="#E0ECF8")
-        self.tab4 = tk.Frame(self, background="#E0ECF8")
-        self.tab5 = tk.Frame(self, background="#E0ECF8")
-        self.tab6 = tk.Frame(self, background="#E0ECF8")
+        self.tab1 = tk.Frame(self, background=self.colors[0])
+        self.tab2 = tk.Frame(self, background=self.colors[0])
+        self.tab3 = tk.Frame(self, background=self.colors[0])
+        self.tab4 = tk.Frame(self, background=self.colors[0])
+        self.tab5 = tk.Frame(self, background=self.colors[0])
+        self.tab6 = tk.Frame(self, background=self.colors[0])
+
 
         ### Tab内のウィジェット作成と配置
         self.tab1_set()
@@ -406,14 +411,14 @@ class Application(tkinter.Tk):
         # self.data.segmentation = image
         ### 最大辺を基準に「ミニ」キャンバスサイズの1/2に合うようリサイズ
         max_size = max([image1.width, image1.height])
-        w_size = int(image1.width * 130 / max_size)
-        h_size = int(image1.height * 130 / max_size)
+        w_size = int(image1.width * 200 / max_size)
+        h_size = int(image1.height * 200 / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image1.resize((w_size,h_size)))
         ### グローバル変数のリストに保存（キャンバスに画像保持）
         tk_images.append(self.tk_image)
         ### 画像の描画位置を1/2キャンバス中心に調節
-        x = int(130 / 2)
-        y = int(130 / 2)
+        x = int(200 / 2)
+        y = int(200 / 2)
         ### キャンバスに描画中の画像を削除
         if self.tab4_minicanvas1_obj is not None:
             self.tab4_minicanvas1.delete(self.tab4_minicanvas1_obj)
@@ -462,6 +467,7 @@ class Application(tkinter.Tk):
         ### 2 : スケールバーの値（パラメタ）取得
         # parameter = self.scale_bar1_tab5.get()
         parameter = self.config.paint1_func_parameter
+        print("paint1  index:{}, parameter:{}".format(index, parameter))
         ### 3 : 該当する関数でペイント
         out = func(self.file_path, parameter)
         self.paint1_path = "img\\paint1.jpeg"
@@ -513,6 +519,7 @@ class Application(tkinter.Tk):
         ### 2 : スケールバーの値（パラメタ）取得
         # parameter = self.scale_bar2_tab5.get()
         parameter = self.config.paint2_func_parameter
+        print("paint2  index:{}, parameter:{}".format(index, parameter))
         ### 3 : 該当する関数でペイント
         out = func(self.file_path, parameter)
         self.paint2_path = "img\\paint2.jpeg"
@@ -737,11 +744,11 @@ class Application(tkinter.Tk):
         self.scale_bar_tab4.bind("<ButtonRelease>", self.pre_compute_masked_image)
 
         ### マスク画像貼り付け用フレーム
-        self.minicanvas_frame = tk.Frame(self.tab4, height=150,width=400, background="gray")
+        self.minicanvas_frame = tk.Frame(self.tab4, height=225,width=600, background="gray")
         self.minicanvas_frame.pack() 
 
         ### マスク適用画像キャンバス１
-        self.tab4_minicanvas1 = tk.Canvas(self.minicanvas_frame, width=130, height=130, bg="black")
+        self.tab4_minicanvas1 = tk.Canvas(self.minicanvas_frame, width=200, height=200, bg="black")
         self.tab4_minicanvas1.grid(column=0, row=0)
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
         self.tab4_minicanvas1_image = None
@@ -749,7 +756,7 @@ class Application(tkinter.Tk):
         self.tab4_minicanvas1_obj= None
 
         ### マスク適用画像キャンバス２
-        self.tab4_minicanvas2 = tk.Canvas(self.minicanvas_frame, width=130, height=130, bg="black")
+        self.tab4_minicanvas2 = tk.Canvas(self.minicanvas_frame, width=200, height=200, bg="black")
         self.tab4_minicanvas2.grid(column=1, row=0)
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
         self.tab4_minicanvas2_image = None
@@ -797,13 +804,13 @@ class Application(tkinter.Tk):
         ### comboboxの貼り付け
         self.paint_combobox1.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
-        self.paint_combobox1.current(0)
+        self.paint_combobox1.current(1)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.paint_combobox1.bind("<<ComboboxSelected>>", self.pre1_compute_paint1)
 
         ### スケールバー 作成と配置
-        self.scale_bar1_tab5 = tk.Scale(self.button_frame1, orient=tkinter.HORIZONTAL, from_=0, to=21)
-        self.scale_bar1_tab5.set(7)
+        self.scale_bar1_tab5 = tk.Scale(self.button_frame1, orient=tkinter.HORIZONTAL, from_=0, to=50)
+        self.scale_bar1_tab5.set(18)
         self.scale_bar1_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
         self.scale_bar1_tab5.bind("<ButtonRelease>", self.pre2_compute_paint1)
@@ -814,14 +821,14 @@ class Application(tkinter.Tk):
         ### comboboxの貼り付け
         self.paint_combobox2.pack()
         ### comboboxの初期値設定変更（index=1が初期値）
-        self.paint_combobox2.current(1)
+        self.paint_combobox2.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.paint_combobox2.bind("<<ComboboxSelected>>", self.pre1_compute_paint2)
 
 
         ### スケールバー 作成と配置
-        self.scale_bar2_tab5 = tk.Scale(self.button_frame2, orient=tkinter.HORIZONTAL, from_=0, to=100)
-        self.scale_bar2_tab5.set(13)
+        self.scale_bar2_tab5 = tk.Scale(self.button_frame2, orient=tkinter.HORIZONTAL, from_=0, to=30)
+        self.scale_bar2_tab5.set(4)
         self.scale_bar2_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
         self.scale_bar2_tab5.bind("<ButtonRelease>", self.pre2_compute_paint2)

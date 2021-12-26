@@ -4,8 +4,8 @@
     "segmentation_func_index"         : 0,
     "segmentation_k"                  : 100,
     "segmentation_saliency_threshold" : 50,
-    "paint1_func_index"               : 0,
-    "paint1_func_parameter"           : 7,
-    "paint2_func_index"               : 1,
-    "paint2_func_parameter"           : 30
+    "paint1_func_index"               : 1,
+    "paint1_func_parameter"           : 20,
+    "paint2_func_index"               : 0,
+    "paint2_func_parameter"           : 4
 }
