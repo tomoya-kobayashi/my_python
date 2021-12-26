@@ -47,17 +47,33 @@ class Application(tkinter.Tk):
         global config_dict_list
         self.config = Config()
 
+
+        ### カラーリスト
         self.colors = []
         self.colors.append("#E0ECF8")
-        self.colors.append("#EAB947")
+        self.colors.append("#002B40")
+        self.colors.append("#3F83A6")
+        self.colors.append("#D9E9E5")
+        self.colors.append("#6CB2D3")
+        self.colors.append("#1D4B69")
+        self.colors.append("#B1C7D4")
+        self.colors.append("#F4F2DB")
+        self.colors.append("#94A1A9")
+        self.colors.append("#424F56")
+
+        ### 【色の変更はここ】パーツの色を設定
+        self.tab_color = self.colors[3]
+        self.window_color = "#fdfdfd"
+        self.button_color = self.colors[5]
+
 
         ### キャンバスのサイズ
         self.canvas_width = 600
         self.canvas_height = 600
         ### アプリのウィンドウのサイズ設定
-        self.geometry("1220x720")
-
-        # self.configure(bg=self.colors[0])
+        self.geometry("1200x645")
+        ### windowの色変更
+        self.configure(bg=self.window_color)
 
 
         # １つ目のキャンバスの作成と配置
@@ -84,12 +100,12 @@ class Application(tkinter.Tk):
         self.note = ttk.Notebook(self, height=578, width=600)
         
         ### Tab用フレーム作成
-        self.tab1 = tk.Frame(self, background=self.colors[0])
-        self.tab2 = tk.Frame(self, background=self.colors[0])
-        self.tab3 = tk.Frame(self, background=self.colors[0])
-        self.tab4 = tk.Frame(self, background=self.colors[0])
-        self.tab5 = tk.Frame(self, background=self.colors[0])
-        self.tab6 = tk.Frame(self, background=self.colors[0])
+        self.tab1 = tk.Frame(self, background=self.tab_color)
+        self.tab2 = tk.Frame(self, background=self.tab_color)
+        self.tab3 = tk.Frame(self, background=self.tab_color)
+        self.tab4 = tk.Frame(self, background=self.tab_color)
+        self.tab5 = tk.Frame(self, background=self.tab_color)
+        self.tab6 = tk.Frame(self, background=self.tab_color)
 
 
         ### Tab内のウィジェット作成と配置
@@ -116,33 +132,43 @@ class Application(tkinter.Tk):
 
 
         # ボタンを配置するフレームの作成と配置
-        # self.button_frame = tkinter.Frame()
-        # self.button_frame.grid(row=1, column=3)
-
-        # レイヤ合成ボタンの作成と配置
-        self.synthesize_button = tkinter.Button(self, text="合成", command=self.synthesize_layers)
-        self.synthesize_button.grid(row=2, column=1)
+        self.button_frame1 = tkinter.Frame(width=self.canvas_width, height=35, bg=self.window_color)
+        self.button_frame1.grid(row=2, column=1)
+        # ボタンを配置するフレームの作成と配置
+        self.button_frame2 = tkinter.Frame(width=self.canvas_width, height=35, bg=self.window_color)
+        self.button_frame2.grid(row=2, column=2)
         
+        
+        # レイヤ合成ボタンの作成と配置
+        self.synthesize_button = tkinter.Button(
+            self.button_frame1, 
+            text="合成", 
+            command=self.synthesize_layers,
+            #bg=self.button_color
+        )
+        # self.synthesize_button.grid(row=2, column=1)
+        self.synthesize_button.place(x=260, y=5)
+
         # 名前を付けて保存ボタン作成と配置
-        self.save_as_button = tkinter.Button(self, text="名前を付けて保存", command=self.save_as)
-        self.save_as_button.grid(row=3, column=1)
+        self.save_as_button = tkinter.Button(self.button_frame1, text="名前を付けて保存", command=self.save_as)
+        self.save_as_button.place(x=300, y=5)
 
         # 設定保存ボタンの作成と配置
-        self.save_config_button = tkinter.Button(self, text="設定保存", command=self.save_config)
-        self.save_config_button.grid(row=2, column=2)
+        self.save_config_button = tkinter.Button(self.button_frame2, text="設定保存", command=self.save_config)
+        self.save_config_button.place(x=100, y=5)
 
         ### comboboxのオブジェクト生成　リスト指定
-        self.config_combobox = ttk.Combobox(self, values=config_dict_list)
+        self.config_combobox = ttk.Combobox(self.button_frame2, values=config_dict_list)
         ### comboboxの貼り付け
-        self.config_combobox.grid(row=3, column=2)
+        self.config_combobox.place(x=200, y=5)
         ### comboboxの初期値設定変更（index=1が初期値）
         self.config_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
         self.config_combobox.bind("<<ComboboxSelected>>", self.compute_all)
 
         # おまかせボタンの作成と配置
-        self.default_button = tkinter.Button(self, text="おまかせ", command=self.compute_all)
-        self.default_button.grid(row=4, column=2)
+        self.default_button = tkinter.Button(self.button_frame2, text="おまかせ", command=self.compute_all)
+        self.default_button.place(x=380, y=5)
 
 
         ### for debug
@@ -709,7 +735,13 @@ class Application(tkinter.Tk):
         self.tab3_canvas_obj= None
 
         ### スケールバー 作成と配置
-        self.scale_bar_tab3 = tk.Scale(self.tab3, orient=tkinter.HORIZONTAL, from_=0, to=200, variable=100)
+        self.scale_bar_tab3 = tk.Scale(
+            self.tab3, 
+            orient=tkinter.HORIZONTAL, 
+            from_=0, 
+            to=200, 
+            background=self.tab_color
+        )
         self.scale_bar_tab3.set(100)
         self.scale_bar_tab3.pack()
         #マウスを離したときにcompute_segmentation実行
@@ -737,7 +769,12 @@ class Application(tkinter.Tk):
         self.tab4_canvas_obj= None
 
         ### スケールバー 作成と配置
-        self.scale_bar_tab4 = tk.Scale(self.tab4, orient=tkinter.HORIZONTAL, from_=0, to=255, variable=50)
+        self.scale_bar_tab4 = tk.Scale(
+            self.tab4, orient=tkinter.HORIZONTAL, 
+            from_=0, 
+            to=255, 
+            background=self.tab_color
+        )
         self.scale_bar_tab4.set(100)
         self.scale_bar_tab4.pack()
         #マウスを離したときにcompute_masked_image実行
@@ -768,16 +805,16 @@ class Application(tkinter.Tk):
     """Tab5のウィジェット作成関数【塗分け】"""
     def tab5_set(self):
         ### ペイント1の画像貼り付け用フレーム
-        self.paint_frame1 = tk.Frame(self.tab5, height=200,width=200, background="gray")
+        self.paint_frame1 = tk.Frame(self.tab5, height=300,width=300, background="gray")
         self.paint_frame1.grid(row=0, column=0)
         ### ペイント2の画像貼り付け用フレーム
-        self.paint_frame2 = tk.Frame(self.tab5, height=200,width=200, background="gray")
+        self.paint_frame2 = tk.Frame(self.tab5, height=300,width=300, background="gray")
         self.paint_frame2.grid(row=1, column=0)
         ### ペイント1のボタン用フレーム
-        self.button_frame1 = tk.Frame(self.tab5, height=200,width=200, background="#E0ECF8")
+        self.button_frame1 = tk.Frame(self.tab5, height=300,width=300, background=self.tab_color)
         self.button_frame1.grid(row=0, column=1)
         ### ペイント2のボタン用フレーム
-        self.button_frame2 = tk.Frame(self.tab5, height=200,width=200, background="#E0ECF8")
+        self.button_frame2 = tk.Frame(self.tab5, height=300,width=300, background=self.tab_color)
         self.button_frame2.grid(row=1, column=1)
 
 
@@ -809,7 +846,13 @@ class Application(tkinter.Tk):
         self.paint_combobox1.bind("<<ComboboxSelected>>", self.pre1_compute_paint1)
 
         ### スケールバー 作成と配置
-        self.scale_bar1_tab5 = tk.Scale(self.button_frame1, orient=tkinter.HORIZONTAL, from_=0, to=50)
+        self.scale_bar1_tab5 = tk.Scale(
+            self.button_frame1, 
+            orient=tkinter.HORIZONTAL, 
+            from_=0, 
+            to=50,
+            background=self.tab_color
+        )
         self.scale_bar1_tab5.set(18)
         self.scale_bar1_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
@@ -827,7 +870,13 @@ class Application(tkinter.Tk):
 
 
         ### スケールバー 作成と配置
-        self.scale_bar2_tab5 = tk.Scale(self.button_frame2, orient=tkinter.HORIZONTAL, from_=0, to=30)
+        self.scale_bar2_tab5 = tk.Scale(
+            self.button_frame2, 
+            orient=tkinter.HORIZONTAL, 
+            from_=0, 
+            to=30,
+            background=self.tab_color
+        )
         self.scale_bar2_tab5.set(4)
         self.scale_bar2_tab5.pack()
         #マウスを離したときにcompute_segmentation実行
