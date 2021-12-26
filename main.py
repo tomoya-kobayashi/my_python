@@ -40,9 +40,6 @@ class Application(tkinter.Tk):
     def __init__(self):
         super().__init__()
 
-        ### dataクラスのオブジェクトをインスタンス変数に取り込む（以降こちらを変更）
-        self.data = data
-
         global tk_images
         global config_dict_list
         self.config = Config()
@@ -193,8 +190,6 @@ class Application(tkinter.Tk):
         )
 
         if len(self.file_path) != 0:
-            ###データオブジェクトに入力画像のパスを保存（本当はリサイズ後がいい）
-            # self.data.input_path = self.file_path
             ### 画像読み込み（jpgも扱うためPILからImageTk使用）
             image = Image.open(self.file_path)
             
@@ -211,9 +206,6 @@ class Application(tkinter.Tk):
             image_resize = image.resize((w_resize, h_resize))
             self.file_path = "img\\input.jpeg"
             image_resize.save(self.file_path)
-
-            ### 読み込んだ画像をデータオブジェクトに保存（型：PIL）
-            # self.data.input = image
 
             ### 画像の描画位置を1/2キャンバス中心に調節
             x = int(self.canvas_width / 4)
@@ -252,20 +244,13 @@ class Application(tkinter.Tk):
         func = self.saliency_func_list[index]
         print(index, func.__name__)
 
-        ### 2 : 入力に合わせ型変換　該当する関数で顕著度計算
-        # image_cv2 = pil_to_cv2(self.data.input)
+        ### 2 : 該当する関数で顕著度計算
         image_cv2 = cv2.imread(self.file_path)
         out = func(image_cv2)
-
-        ### 3 : 出力画像をデータオブジェクトに保存（PIL型にしてから）
-        self.data.saliency = cv2_to_pil(out)
 
         ### 3.5 : 画像として一度保存　パスをself.saliency_pathに保存
         self.saliency_path = "img\\saliency.jpeg"
         io.imsave(self.saliency_path, out)
-        
-        ### 4 : ローカル変数imageに保存し、リサイズなどしてキャンバス貼り付け
-        # image = self.data.saliency
         
         ### 4.5 : 保存してあった顕著性マップをpilで読み込み
         image = Image.open(self.saliency_path)
@@ -323,8 +308,7 @@ class Application(tkinter.Tk):
         # parameter = self.scale_bar_tab3.get()
         parameter = self.config.segmentation_k
         print(parameter)
-        ### 3 : 入力に合わせ型変換　該当する関数で領域分割　領域顕著度で使用するためslicオブジェクトを保存
-        # image_cv2 = pil_to_cv2(self.data.input)
+        ### 3 : 該当する関数で領域分割　領域顕著度で使用するためslicオブジェクトを保存
         image_cv2 = cv2.imread(self.file_path)
         out, self.slic = func(image_cv2, parameter)
 
@@ -332,12 +316,7 @@ class Application(tkinter.Tk):
         io.imsave(self.segmentation_path, out)
 
         ### 4 : ローカル変数imageに保存し、リサイズなどしてキャンバス貼り付け
-        # out_cv2 = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)
-        # self.data.segmentation = cv2_to_pil(out)
-        # pil_image = Image.fromarray(out)
-
         image = Image.open(self.segmentation_path)
-        self.data.segmentation = image
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image.width, image.height])
         w_size = int(image.width * (self.canvas_height / 2) / max_size)
@@ -363,17 +342,13 @@ class Application(tkinter.Tk):
 
     #############################################################################   
     def compute_saliency_segmentation(self):
-        # saliency_map = pil_to_cv2(self.data.saliency)
-        # image_cv2 = cv2.imread(self.saliency_path)
         saliency_map = io.imread(self.saliency_path)
         out = slic_saliency(saliency_map, self.slic)
-        self.data.saliency_segmentation = out
 
         self.saliency_segmentation_path = "img\\saliency_segmentation.jpeg"
         io.imsave(self.saliency_segmentation_path, out)
 
         image = Image.open(self.saliency_segmentation_path)
-        # self.data.segmentation = image
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image.width, image.height])
         w_size = int(image.width * (self.canvas_height / 2) / max_size)
@@ -434,7 +409,6 @@ class Application(tkinter.Tk):
         
 
         image1 = Image.open(self.masked_image1_path)
-        # self.data.segmentation = image
         ### 最大辺を基準に「ミニ」キャンバスサイズの1/2に合うようリサイズ
         max_size = max([image1.width, image1.height])
         w_size = int(image1.width * 200 / max_size)
@@ -508,7 +482,6 @@ class Application(tkinter.Tk):
         out1.save(self.paint1_layer_path)
         
         image1 = Image.open(self.paint1_layer_path)
-        # self.data.segmentation = image
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image1.width, image1.height])
         w_size = int(image1.width * (self.canvas_height / 2) / max_size)
@@ -560,7 +533,6 @@ class Application(tkinter.Tk):
         out1.save(self.paint2_layer_path)
         
         image2 = Image.open(self.paint2_layer_path)
-        # self.data.segmentation = image
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image2.width, image2.height])
         w_size = int(image2.width * (self.canvas_height / 2) / max_size)
@@ -593,7 +565,6 @@ class Application(tkinter.Tk):
         out.save(self.out_path)
 
         image = Image.open(self.out_path)
-        # self.data.segmentation = image
         ### 最大辺を基準にキャンバスサイズに合うようリサイズ
         max_size = max([image.width, image.height])
         w_size = int(image.width * self.canvas_height / max_size)
