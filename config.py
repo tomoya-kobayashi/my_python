@@ -36,6 +36,9 @@ class Config():
             'paint2_func_parameter'           : self.paint2_func_parameter
         }
 
+        
+        self.src_path = "Config\\default_1.json"
+
 
     def load_para_from_json(self, input_json_file_path):
         json_file = open(input_json_file_path, 'r')
@@ -82,10 +85,8 @@ class Config():
 
 
     def make_json(self, dst_path):
-        ### 複製元のパス
-        src_path = "Config\\default_1.json"
         ### jsonファイルを複製
-        shutil.copyfile(src_path, dst_path)
+        shutil.copyfile(self.src_path, dst_path)
         self.update_self_dict()
         with open(dst_path, 'w') as fp:
             json.dump(self.config_dict, fp)

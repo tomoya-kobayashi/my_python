@@ -19,18 +19,11 @@ from paint import *
 
 
 
-data = Data()
-# config = Config()
-
-"""
-config.saliency_func_index
-"""
-
 tk_images = []
 config_dict_list = []
 for f in glob.glob("config\\*.json"):
     config_dict_list.append(os.path.basename(f)[0:-5])
-
+config_index = 0
 print(config_dict_list)
 
 
@@ -42,6 +35,7 @@ class Application(tkinter.Tk):
 
         global tk_images
         global config_dict_list
+        global config_index
         self.config = Config()
 
 
@@ -161,7 +155,7 @@ class Application(tkinter.Tk):
         ### comboboxの初期値設定変更（index=1が初期値）
         self.config_combobox.current(0)
         ### 【重要】プルダウン選択時に呼び出す関数をバインド
-        self.config_combobox.bind("<<ComboboxSelected>>", self.compute_all)
+        self.config_combobox.bind("<<ComboboxSelected>>", self.pre_compute_all)
 
         # おまかせボタンの作成と配置
         self.default_button = tkinter.Button(self.button_frame2, text="おまかせ", command=self.compute_all)
@@ -600,15 +594,24 @@ class Application(tkinter.Tk):
         io.imsave(filename, image)
 
 
+    def pre_compute_all(self, event):
+        global config_index
+        config_index = self.config_combobox.current()
+        self.compute_all()
 
-    def compute_all(self, event):
-        index = self.config_combobox.current()
+    def compute_all(self):
+        index = config_index
         # print("{}.json".format(config_dict_list[index]))
         dict = self.config.load_para_from_json("config\\{}.json".format(config_dict_list[index]))
         self.config.update_param(dict)
         if self.file_path is None:
             print("入力がありません")
-            return
+            exit()
+
+        ### ウィジェットの設定値に現在のパラメタをセット
+        self.fix_widget_setting()
+        
+        ### まとめて最後まで処理
         self.compute_saliency()
         self.compute_segmentation()
         # self.scale_bar_tab3['variable'] = self.config.segmentation_k
@@ -630,7 +633,19 @@ class Application(tkinter.Tk):
         config_dict_list.append(os.path.basename(filename)[0:-5])
         print(os.path.basename(filename)[0:-5])
         self.config_combobox['values'] = config_dict_list
-        
+
+
+    def fix_widget_setting(self):
+        ### パラメタに合うようにウィジェットの設定値をセット
+        self.saliency_combobox.current(self.config.saliency_func_index)
+        self.segmentation_combobox.current(self.config.segmentation_func_index)
+        self.scale_bar_tab3.set(self.config.segmentation_k)
+        self.scale_bar_tab4.set(self.config.segmentation_saliency_threshold)
+        self.paint_combobox1.current(self.config.paint1_func_index)
+        self.scale_bar1_tab5.set(self.config.paint1_func_parameter)
+        self.paint_combobox2.current(self.config.paint2_func_index)
+        self.scale_bar2_tab5.set(self.config.paint2_func_parameter)
+
 
 
     def getNoteName(self,event):
