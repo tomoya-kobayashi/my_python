@@ -27,3 +27,9 @@ def Gaussian(path, parameter):
     parameter = parameter * 2 - 1
     dst = cv2.GaussianBlur(img_rgb, ksize=(parameter, parameter), sigmaX=parameter)
     return dst
+
+
+def flat(path, parameter):
+    img = cv2.imread("img\\segmentation.jpeg")
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img_rgb

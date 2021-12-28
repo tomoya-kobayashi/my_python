@@ -6,12 +6,29 @@ import numpy as np
 from my_mask import do_mask, make_do_mask, make_mask
 
 
-src = cv2.imread("img\\input.jpeg")
+img = cv2.imread("img\\input.jpeg")
 
-### gaussian filter
-dst = cv2.GaussianBlur(src, ksize=(7, 7), sigmaX=2)
 
 ### sobel filter
-# dst = cv2.Sobel(src, cv2.CV_32F, 1, 1, ksize=3)
 
-cv2.imwrite("img\\gaussian.jpeg", dst)
+### グレースケール変換
+gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+gray_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+gray_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+dst = np.sqrt(gray_x ** 2 + gray_y ** 2)
+
+h, w = gray.shape
+
+img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) # 色空間をBGRからHSVに変換
+
+for y in range(h):
+    for x in range(w):
+        img_hsv[y][x][1] *= (dst[y][x]/255+0.3)*0.8
+
+img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+
+print(dst)
+print(img_hsv)
+
+cv2.imwrite("img\\edge_darkening.jpeg", img_rgb)
+cv2.imwrite("img\\sobel.jpeg", dst)
