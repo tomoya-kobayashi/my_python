@@ -19,3 +19,11 @@ def pencil(path, parameter):
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     dst_gray, dst_color = cv2.pencilSketch(img_rgb, sigma_s=parameter, sigma_r=0.06, shade_factor=0.09) 
     return dst_color
+
+
+def Gaussian(path, parameter):
+    img = cv2.imread(path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    parameter = parameter * 2 - 1
+    dst = cv2.GaussianBlur(img_rgb, ksize=(parameter, parameter), sigmaX=parameter)
+    return dst

@@ -82,8 +82,13 @@ class Application(tkinter.Tk):
         self.saliency_name_list = [itti_saliency.__name__, itti_saliency.__name__]
         self.segmentation_func_list = [slic, slic_opencv]
         self.segmentation_name_list = [slic.__name__, slic_opencv.__name__]
-        self.paint_func_list = [kuwahara, watercolor, pencil]
-        self.paint_name_list = ["油彩:{}".format(kuwahara.__name__), "水彩:{}".format(watercolor.__name__), "鉛筆:{}".format(pencil.__name__)]
+        self.paint_func_list = [kuwahara, watercolor, pencil, Gaussian]
+        self.paint_name_list = [
+            "油彩:{}".format(kuwahara.__name__),
+            "水彩:{}".format(watercolor.__name__), 
+            "鉛筆:{}".format(pencil.__name__),
+            "ガウスぼかし:{}".format(Gaussian.__name__)
+        ]
         
 
         #############################################################################
