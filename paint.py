@@ -33,3 +33,10 @@ def flat(path, parameter):
     img = cv2.imread("img\\segmentation.jpeg")
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img_rgb
+
+
+def oilpaint(path, parameter):
+    img = cv2.imread(path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    cartoon = cv2.xphoto.oilPainting(img_rgb, size=parameter, dynRatio=1)
+    return cartoon
