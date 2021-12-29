@@ -82,7 +82,7 @@ class Application(tkinter.Tk):
         self.saliency_name_list = [itti_saliency.__name__, itti_saliency.__name__]
         self.segmentation_func_list = [slic, slic_opencv]
         self.segmentation_name_list = [slic.__name__, slic_opencv.__name__]
-        self.paint_func_list = [kuwahara, watercolor, pencil, Gaussian, flat, oilpaint]
+        self.paint_func_list = [kuwahara, watercolor, pencil, Gaussian, flat, oilpaint, watercolor_reformed]
         self.paint_name_list = [
             "油彩１:{}".format(kuwahara.__name__),
             "水彩:{}".format(watercolor.__name__), 
@@ -90,6 +90,7 @@ class Application(tkinter.Tk):
             "ガウスぼかし:{}".format(Gaussian.__name__),
             "フラット塗り:{}".format(flat.__name__),
             "油彩２:{}".format(oilpaint.__name__),
+            "水彩２:{}".format(watercolor_reformed.__name__)
 
         ]
         
@@ -486,14 +487,14 @@ class Application(tkinter.Tk):
         image1 = Image.open(self.paint1_layer_path)
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image1.width, image1.height])
-        w_size = int(image1.width * (self.canvas_height / 2) / max_size)
-        h_size = int(image1.height * (self.canvas_height / 2) / max_size)
+        w_size = int(image1.width * (self.canvas_height / 2 - 11) / max_size)
+        h_size = int(image1.height * (self.canvas_height / 2 - 11) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image1.resize((w_size,h_size)))
         ### グローバル変数のリストに保存（キャンバスに画像保持）
         tk_images.append(self.tk_image)
         ### 画像の描画位置を1/2キャンバス中心に調節
-        x = int(self.canvas_width / 4)
-        y = int(self.canvas_height / 4)
+        x = int(self.canvas_width / 4 - 5)
+        y = int(self.canvas_height / 4 - 5)
         ### キャンバスに描画中の画像を削除
         if self.tab5_canvas1_obj is not None:
             self.tab5_canvas1.delete(self.tab5_canvas1_obj)
@@ -537,14 +538,14 @@ class Application(tkinter.Tk):
         image2 = Image.open(self.paint2_layer_path)
         ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
         max_size = max([image2.width, image2.height])
-        w_size = int(image2.width * (self.canvas_height / 2) / max_size)
-        h_size = int(image2.height * (self.canvas_height / 2) / max_size)
+        w_size = int(image2.width * (self.canvas_height / 2 - 11) / max_size)
+        h_size = int(image2.height * (self.canvas_height / 2 - 11) / max_size)
         self.tk_image = ImageTk.PhotoImage(image=image2.resize((w_size,h_size)))
         ### グローバル変数のリストに保存（キャンバスに画像保持）
         tk_images.append(self.tk_image)
         ### 画像の描画位置を1/2キャンバス中心に調節
-        x = int(self.canvas_width / 4)
-        y = int(self.canvas_height / 4)
+        x = int(self.canvas_width / 4 - 5)
+        y = int(self.canvas_height / 4 - 5)
         ### キャンバスに描画中の画像を削除
         if self.tab5_canvas2_obj is not None:
             self.tab5_canvas2.delete(self.tab5_canvas2_obj)
@@ -799,21 +800,21 @@ class Application(tkinter.Tk):
     """Tab5のウィジェット作成関数【塗分け】"""
     def tab5_set(self):
         ### ペイント1の画像貼り付け用フレーム
-        self.paint_frame1 = tk.Frame(self.tab5, height=300,width=300, background="gray")
+        self.paint_frame1 = tk.Frame(self.tab5, height=289,width=300, background="gray")
         self.paint_frame1.grid(row=0, column=0)
         ### ペイント2の画像貼り付け用フレーム
-        self.paint_frame2 = tk.Frame(self.tab5, height=300,width=300, background="gray")
+        self.paint_frame2 = tk.Frame(self.tab5, height=289,width=300, background="gray")
         self.paint_frame2.grid(row=1, column=0)
         ### ペイント1のボタン用フレーム
-        self.button_frame1 = tk.Frame(self.tab5, height=300,width=300, background=self.tab_color)
+        self.button_frame1 = tk.Frame(self.tab5, height=289,width=300, background=self.tab_color)
         self.button_frame1.grid(row=0, column=1)
         ### ペイント2のボタン用フレーム
-        self.button_frame2 = tk.Frame(self.tab5, height=300,width=300, background=self.tab_color)
+        self.button_frame2 = tk.Frame(self.tab5, height=289,width=300, background=self.tab_color)
         self.button_frame2.grid(row=1, column=1)
 
 
         ### 画像表示用キャンバス
-        self.tab5_canvas1 = tk.Canvas(self.paint_frame1, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
+        self.tab5_canvas1 = tk.Canvas(self.paint_frame1, width=self.canvas_width/2-11, height=self.canvas_height/2-11, bg="black")
         self.tab5_canvas1.pack()
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
         self.tab5_image1 = None
@@ -821,7 +822,7 @@ class Application(tkinter.Tk):
         self.tab5_canvas1_obj= None
 
         ### 画像表示用キャンバス
-        self.tab5_canvas2 = tk.Canvas(self.paint_frame2, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
+        self.tab5_canvas2 = tk.Canvas(self.paint_frame2, width=self.canvas_width/2-11, height=self.canvas_height/2-11, bg="black")
         self.tab5_canvas2.pack()
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
         self.tab5_image2 = None
@@ -844,7 +845,7 @@ class Application(tkinter.Tk):
             self.button_frame1, 
             orient=tkinter.HORIZONTAL, 
             from_=0, 
-            to=50,
+            to=200,
             background=self.tab_color
         )
         self.scale_bar1_tab5.set(18)

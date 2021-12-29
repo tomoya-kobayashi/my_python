@@ -28,6 +28,11 @@ for y in range(h):
         else:
             # img_hsv[y][x][1] *= (dst[y][x]/255) * 0.8
             img_hsv[y][x][1] += 70
+            img_hsv[y][x][2] -= 70
+            if(img_hsv[y][x][1]>255):
+                img_hsv[y][x][1]=255
+            if(img_hsv[y][x][2]<0):
+                img_hsv[y][x][2]=0
 
 
 img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
