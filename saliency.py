@@ -8,7 +8,7 @@ import cv2
 
 
 """ittiのsaliency map の計算"""
-def itti_saliency(image_cv2):
+def Hou_saliency(image_cv2):
     saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
     bool, map = saliency.computeSaliency(image_cv2)
     out = (map * 255).astype("uint8")

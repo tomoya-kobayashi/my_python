@@ -4,7 +4,7 @@ import tkinter as tk
 # from tkinter import ttk
 import tkinter.ttk as ttk
 import tkinter.filedialog
-from PIL import Image,ImageTk
+from PIL import Image,ImageTk, ImageDraw
 from skimage import io, segmentation, color
 import glob
 import os.path
@@ -16,6 +16,7 @@ from my_convert import *
 from saliency import *
 from segmentation import *
 from paint import *
+from normal_distribution import *
 
 
 
@@ -78,8 +79,8 @@ class Application(tkinter.Tk):
 
 
         ### 各手法の関数と関数名リスト
-        self.saliency_func_list = [itti_saliency, itti_saliency]
-        self.saliency_name_list = [itti_saliency.__name__, itti_saliency.__name__]
+        self.saliency_func_list = [Hou_saliency, Hou_saliency]
+        self.saliency_name_list = [Hou_saliency.__name__, Hou_saliency.__name__]
         self.segmentation_func_list = [slic, slic_opencv]
         self.segmentation_name_list = [slic.__name__, slic_opencv.__name__]
         self.paint_func_list = [kuwahara, watercolor, pencil, Gaussian, flat, oilpaint, watercolor_reformed]
@@ -504,6 +505,7 @@ class Application(tkinter.Tk):
 
 
 
+
     def pre1_compute_paint2(self, event):
         self.config.paint2_func_index = self.paint_combobox2.current()
         self.compute_paint2()
@@ -662,7 +664,61 @@ class Application(tkinter.Tk):
         self.label["text"]=note.tab(note.select(),"text")
 
 
+    def correct_saliency(self, event):
+        print("x:{} y:{}".format(event.x, event.y))
 
+        image = Image.open(self.saliency_path)
+        image_w = image.width
+        image_h = image.height
+        canvas_h = self.canvas_height/2
+        canvas_w = self.canvas_width/2
+
+        if(image_w>image_h):
+            dh = (canvas_h - image_h*canvas_h/image_w)/2
+            X = int(event.x * image_w / canvas_w)
+            Y = int((event.y-dh) * image_w / canvas_w)
+        else:
+            dw = (canvas_w - image_w*canvas_w/image_h)/2
+            X = int((event.x-dw) * image_h / canvas_h)
+            Y = int(event.y * image_h / canvas_h)
+
+        Z = norm_dist()
+        print("Z:", Z)
+        # print("saliency_x:{} saliency_y:{}".format(image_w, image_h))
+        print("X:{} Y:{}".format(X, Y))
+
+        ### drawオブジェクト作成，クリック座標に円を描画，変更を保存
+        self.radius_size = self.scale_bar_tab2.get()
+        draw = ImageDraw.Draw(image)
+        
+        if self.radio_value.get()==255:
+            draw.pieslice((X-self.radius_size, Y-self.radius_size, X+self.radius_size, Y+self.radius_size), start=0, end=360, fill=255, outline=0)
+        elif self.radio_value.get()==0:
+            draw.pieslice((X-self.radius_size, Y-self.radius_size, X+self.radius_size, Y+self.radius_size), start=0, end=360, fill=0, outline=0)
+        image.save(self.saliency_path)
+
+        # image = Image.open(self.saliency_path)
+
+        ### 最大辺を基準にキャンバスサイズの1/2に合うようリサイズ
+        max_size = max([image.width, image.height])
+        w_size = int(image.width*(self.canvas_height/2)/max_size)
+        h_size = int(image.height*(self.canvas_height/2)/max_size)
+        self.tk_image = ImageTk.PhotoImage(image=image.resize((w_size,h_size)))
+
+        ### グローバル変数のリストに保存（キャンバスに画像保持）
+        tk_images.append(self.tk_image)
+
+        ### 画像の描画位置を1/2キャンバス中心に調節
+        x = int(self.canvas_width / 4)
+        y = int(self.canvas_height / 4)
+        ### キャンバスに描画中の画像を削除
+        if self.tab2_canvas_obj is not None:
+            self.tab2_canvas.delete(self.tab2_canvas_obj)
+            print("tab2 canvas object is deleted!")
+        ### 画像をキャンバスに描画
+        self.tab2_canvas_obj = self.tab2_canvas.create_image(x, y, image=self.tk_image)
+
+        
 
 
 
@@ -702,11 +758,52 @@ class Application(tkinter.Tk):
         ### 画像表示用キャンバス
         self.tab2_canvas = tk.Canvas(self.tab2, width=self.canvas_width/2, height=self.canvas_height/2, bg="black")
         self.tab2_canvas.pack()
+        self.tab2_canvas.bind('<ButtonPress-1>', self.correct_saliency)
         # 画像オブジェクトの設定（初期はNone）⇒これ使う？
         self.tab2_image = None
         ### キャンバスに描画中の画像（初期はNone）
-        self.tab2_canvas_obj= None
+        self.tab2_canvas_obj = None
 
+         # ラジオボタンの値
+        self.radio_value = tk.IntVar(value = 1)     # 初期値を設定する場合
+        #self.radio_value = tk.IntVar()             # 初期値を設定しないと0になる
+        
+        # ラジオボタンの作成
+        self.tab2_radio0 = tk.Radiobutton(self.tab2, 
+                           text = "顕著度＋",      # ラジオボタンの表示名
+                           command = self.radio_click,  # クリックされたときに呼ばれるメソッド
+                           variable = self.radio_value, # 選択の状態を設定する
+                           value = 255                    # ラジオボタンに割り付ける値の設定
+                           )
+
+        self.tab2_radio1 = tk.Radiobutton(self.tab2, 
+                           text = "顕著度ー",      # ラジオボタンの表示名
+                           command = self.radio_click,  # クリックされたときに呼ばれるメソッド
+                           variable = self.radio_value, # 選択の状態を設定する
+                           value = 0                    # ラジオボタンに割り付ける値の設定
+                           )
+
+        self.tab2_radio0.pack()
+        self.tab2_radio1.pack()
+
+        ### スケールバー 作成と配置
+        self.scale_bar_tab2 = tk.Scale(
+            self.tab2, 
+            orient=tkinter.HORIZONTAL, 
+            from_=0, 
+            to=100, 
+            background=self.tab_color
+        )
+        self.scale_bar_tab2.set(20)
+        self.scale_bar_tab2.pack()
+        #マウスを離したときにcompute_segmentation実行
+        # self.scale_bar_tab2.bind("<ButtonRelease>", self.pre2_compute_segmentation)
+
+
+    def radio_click(self):
+        # ラジオボタンの値を取得
+        value = self.radio_value.get()
+        print(f"ラジオボタンの値は {value} です")
 
 
     """Tab3のウィジェット作成関数【領域分割】"""

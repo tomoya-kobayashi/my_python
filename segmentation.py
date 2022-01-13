@@ -8,10 +8,12 @@ from slic_class import *
 
 """opencvにおけるSLIC法の関数　（型：numpy　⇒　cv2として扱える？）"""
 def slic_opencv(image_sk, k):
-    label = segmentation.slic(image_sk, compactness=20, start_label=1)
+    label = segmentation.slic(image_sk, compactness=k, start_label=1)
+    print(label[100])
+    print(type(label))
     out = color.label2rgb(label, image_sk, kind = 'avg', bg_label=0)
     # io.imsave("img\\cat1_slic.jpeg", out)
-    return out
+    return out, out
 
 
 def slic(image_cv2, var_k=100):

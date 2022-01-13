@@ -34,7 +34,6 @@ for y in range(h):
             if(img_hsv[y][x][2]<0):
                 img_hsv[y][x][2]=0
 
-
 img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
 
 print(dst)
