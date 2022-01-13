@@ -22,6 +22,8 @@ from normal_distribution import *
 
 tk_images = []
 config_dict_list = []
+### configフォルダ内のjsonファイルを全て呼び出し，configリストに保存．
+###（後にプルダウンに表示される）
 for f in glob.glob("config\\*.json"):
     config_dict_list.append(os.path.basename(f)[0:-5])
 config_index = 0
@@ -63,7 +65,7 @@ class Application(tkinter.Tk):
         self.canvas_width = 600
         self.canvas_height = 600
         ### アプリのウィンドウのサイズ設定
-        self.geometry("1200x645")
+        self.geometry("1200x700")
         ### windowの色変更
         self.configure(bg=self.window_color)
 
@@ -138,6 +140,12 @@ class Application(tkinter.Tk):
         # ボタンを配置するフレームの作成と配置
         self.button_frame2 = tkinter.Frame(width=self.canvas_width, height=35, bg=self.window_color)
         self.button_frame2.grid(row=2, column=2)
+        # ラベルを配置するフレームの作成と配置
+        self.label_frame1 = tkinter.Frame(width=self.canvas_width, height=70, bg=self.window_color)
+        self.label_frame1.grid(row=3, column=1)
+        # ラベルを配置するフレームの作成と配置
+        self.label_frame2 = tkinter.Frame(width=self.canvas_width, height=70, bg=self.window_color)
+        self.label_frame2.grid(row=3, column=2)
         
         
         # レイヤ合成ボタンの作成と配置
@@ -172,15 +180,64 @@ class Application(tkinter.Tk):
         self.default_button.place(x=380, y=5)
 
 
-        ### for debug
-        # print(cv2.imread("img\\ramen_mask30.png").shape)
-
-
-
-
-
+        ### パラメタ表示用ラベルの文字列を入れる変数の辞書
+        self.label_dict = dict()
+        self.label_dict['name']                            = tk.StringVar()
+        self.label_dict['saliency_func_index']             = tk.StringVar()
+        self.label_dict['segmentation_func_index']         = tk.StringVar()
+        self.label_dict['segmentation_k']                  = tk.StringVar()
+        self.label_dict['segmentation_saliency_threshold'] = tk.StringVar()
+        self.label_dict['paint1_func_index']               = tk.StringVar()
+        self.label_dict['paint1_func_parameter']           = tk.StringVar()
+        self.label_dict['paint2_func_index']               = tk.StringVar()
+        self.label_dict['paint2_func_parameter']           = tk.StringVar()
         
+        ### ラベルの文字列を入れる変数の辞書に，現在のパラメタを代入
+        param_dict = self.config.get_dict()
+        self.label_dict['name'].set("名前："+str(param_dict['name']))
+        self.label_dict['saliency_func_index'].set("顕著性マップ："+str(param_dict['saliency_func_index']))
+        self.label_dict['segmentation_func_index'].set("領域分割："+str(param_dict['segmentation_func_index']))
+        self.label_dict['segmentation_k'].set("分割数："+str(param_dict['segmentation_k']))
+        self.label_dict['segmentation_saliency_threshold'].set("領域顕著度_閾値："+str(param_dict['segmentation_saliency_threshold']))
+        self.label_dict['paint1_func_index'].set("画材１："+str(param_dict['paint1_func_index']))
+        self.label_dict['paint1_func_parameter'].set("画材１_param："+str(param_dict['paint1_func_parameter']))
+        self.label_dict['paint2_func_index'].set("画材２："+str(param_dict['paint2_func_index']))         
+        self.label_dict['paint2_func_parameter'].set("画材２_param："+str(param_dict['paint2_func_parameter']))
 
+        ### ラベル作成
+        self.label_name                            = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['name'])
+        self.label_saliency_func_index             = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['saliency_func_index'])
+        self.label_segmentation_func_index         = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['segmentation_func_index'])
+        self.label_segmentation_k                  = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['segmentation_k'])
+        self.label_segmentation_saliency_threshold = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['segmentation_saliency_threshold'])
+        self.label_paint1_func_index               = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['paint1_func_index'])
+        self.label_paint1_func_parameter           = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['paint1_func_parameter'])
+        self.label_paint2_func_index               = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['paint2_func_index'])
+        self.label_paint2_func_parameter           = tk.ttk.Label(self.label_frame2, textvariable=self.label_dict['paint2_func_parameter'])
+
+        ### ラベル配置
+        self.label_name.grid(row=0, column=0)
+        self.label_saliency_func_index.grid(row=0, column=1)
+        self.label_segmentation_func_index.grid(row=0, column=2)
+        self.label_segmentation_k.grid(row=1, column=0)
+        self.label_segmentation_saliency_threshold.grid(row=1, column=1)
+        self.label_paint1_func_index.grid(row=1, column=2)
+        self.label_paint1_func_parameter.grid(row=1, column=3)
+        self.label_paint2_func_index.grid(row=1, column=4)
+        self.label_paint2_func_parameter.grid(row=1, column=5)
+    
+    ### ラベル更新関数．パラメタ更新する度これを実行（？）
+    def update_label(self):
+        param_dict = self.config.get_dict()
+        self.label_dict['name'].set("名前："+str(param_dict['name']))
+        self.label_dict['saliency_func_index'].set("顕著性マップ："+str(param_dict['saliency_func_index']))
+        self.label_dict['segmentation_func_index'].set("領域分割："+str(param_dict['segmentation_func_index']))
+        self.label_dict['segmentation_k'].set("分割数："+str(param_dict['segmentation_k']))
+        self.label_dict['segmentation_saliency_threshold'].set("領域顕著度_閾値："+str(param_dict['segmentation_saliency_threshold']))
+        self.label_dict['paint1_func_index'].set("画材１："+str(param_dict['paint1_func_index']))
+        self.label_dict['paint1_func_parameter'].set("画材１_param："+str(param_dict['paint1_func_parameter']))
+        self.label_dict['paint2_func_index'].set("画材２："+str(param_dict['paint2_func_index']))         
+        self.label_dict['paint2_func_parameter'].set("画材２_param："+str(param_dict['paint2_func_parameter']))
 
 
 
@@ -611,6 +668,7 @@ class Application(tkinter.Tk):
         self.compute_all()
 
     def compute_all(self):
+        self.update_label()
         index = config_index
         # print("{}.json".format(config_dict_list[index]))
         dict = self.config.load_para_from_json("config\\{}.json".format(config_dict_list[index]))

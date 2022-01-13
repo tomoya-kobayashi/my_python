@@ -90,5 +90,10 @@ class Config():
         self.update_self_dict()
         with open(dst_path, 'w') as fp:
             json.dump(self.config_dict, fp)
+
+
+    def get_dict(self):
+        self.update_self_dict()
+        return self.config_dict
         
 
